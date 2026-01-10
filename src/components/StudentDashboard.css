@@ -1,0 +1,899 @@
+/* Global Variables for Premium Theme */
+:root {
+    --primary-gradient: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
+    --accent-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --danger-gradient: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    --btn-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    --btn-hover-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Base Dashboard Container */
+.dashboard-container {
+    padding: 140px 20px 80px;
+    min-height: 100vh;
+    background: radial-gradient(circle at top right, #f8fafc, #eef2f6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+}
+
+/* --- Premium Header Section --- */
+.dashboard-header-wrapper {
+    width: 100%;
+    max-width: 950px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 32px;
+    padding: 30px 40px;
+    box-shadow: var(--glass-shadow);
+    margin-bottom: 50px;
+    z-index: 10;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle background glow for header */
+.dashboard-header-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(56, 239, 125, 0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.header-info h1 {
+    font-size: 36px;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    margin: 0 0 5px 0;
+    letter-spacing: -1px;
+}
+
+.welcome-row {
+    font-size: 16px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.user-highlight {
+    color: #0f172a;
+    font-weight: 700;
+    margin-left: 6px;
+}
+
+/* --- Action Buttons (Notif, Settings) --- */
+.header-actions {
+    display: flex;
+    gap: 16px;
+}
+
+.btn-notif,
+.settings-toggle-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    color: #475569;
+    font-size: 0;
+    /* Hide text */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+.btn-notif:hover,
+.settings-toggle-btn:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    color: #0f172a;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.notif-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 10px;
+    height: 10px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* --- Tabs --- */
+.dashboard-tabs {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+    background: rgba(0, 0, 0, 0.03);
+    padding: 6px;
+    border-radius: 20px;
+    position: relative;
+    z-index: 1;
+    width: fit-content;
+}
+
+.tab-button {
+    padding: 12px 32px;
+    border-radius: 16px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-button.active {
+    background: white;
+    color: #0f172a;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    font-weight: 700;
+}
+
+/* --- Pass Card (The Star of the Show) --- */
+.pass-card-container {
+    perspective: 1000px;
+}
+
+.pass-card {
+    background: white;
+    border-radius: 32px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    position: relative;
+    transition: transform 0.4s ease;
+}
+
+.pass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.2);
+}
+
+.pass-header {
+    background: var(--primary-gradient);
+    padding: 24px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pass-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+}
+
+.pass-status-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.pass-content {
+    padding: 30px;
+}
+
+.user-details {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.pass-photo {
+    width: 70px;
+    height: 70px;
+    border-radius: 16px;
+    object-fit: cover;
+    border: 4px solid #f8fafc;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.user-details h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.user-details p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.pass-route-info {
+    background: #f8fafc;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px dashed #cbd5e1;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.info-row:last-child {
+    margin-bottom: 0;
+}
+
+.info-row span {
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.info-row strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.usage-row strong {
+    color: #10b981;
+}
+
+.qr-section {
+    display: flex;
+    justify-content: center;
+}
+
+.qr-wrapper {
+    background: white;
+    padding: 15px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+}
+
+/* --- Action Buttons (Download, Pay, Apply) table-stakes --- */
+
+button {
+    font-family: inherit;
+}
+
+.btn-download-pass,
+.btn-pay-now,
+.btn-apply-premium,
+.btn-option-primary {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 15px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Primary Button Style (Gradient) */
+.btn-download-pass,
+.btn-option-primary {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+}
+
+.btn-download-pass:hover,
+.btn-option-primary:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 30px rgba(15, 23, 42, 0.35);
+}
+
+.btn-download-pass:active {
+    transform: translateY(-2px);
+}
+
+/* Pay Now Button (Accent) */
+.btn-pay-now {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 10px 20px rgba(17, 153, 142, 0.3);
+}
+
+.btn-pay-now:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 30px rgba(17, 153, 142, 0.45);
+}
+
+/* Apply Premium Button (Ghost/Outline turned Solid) */
+.btn-apply-premium {
+    background: #0f172a;
+    color: white;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+}
+
+.btn-apply-premium:hover {
+    background: #1e293b;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 20px 35px rgba(15, 23, 42, 0.25);
+}
+
+/* Outline/Secondary Buttons */
+.btn-option-outline,
+.btn-apply-again,
+.btn-outline {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    background: white;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.btn-option-outline {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.btn-option-outline:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+}
+
+/* --- Flexible Travel Cards --- */
+.travel-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.option-card {
+    background: white;
+    border-radius: 28px;
+    padding: 35px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: all 0.4s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.option-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+}
+
+.option-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.option-card h3 {
+    font-size: 22px;
+    color: #1e293b;
+    margin-bottom: 10px;
+    font-weight: 800;
+}
+
+.option-card p {
+    color: #64748b;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+/* Recommended/Highlight Card */
+.option-card.highlight {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+}
+
+.option-card.highlight h3,
+.option-card.highlight p {
+    color: white;
+}
+
+.option-card.highlight p {
+    opacity: 0.9;
+}
+
+.option-card.highlight .btn-option-primary {
+    background: white;
+    color: #059669;
+}
+
+.badge-recommended {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.25);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Price Tag */
+.price-tag {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 25px;
+}
+
+.price-tag span {
+    font-size: 14px;
+    opacity: 0.7;
+    font-weight: 500;
+}
+
+/* Validity Tag */
+.validity-tag {
+    display: inline-block;
+    background: #f1f5f9;
+    padding: 6px 12px;
+    border-radius: 12px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+/* --- Common UI States --- */
+.loading-state,
+.error-state {
+    padding: 40px;
+    text-align: center;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    color: #64748b;
+    font-weight: 500;
+    animation: fadeIn 0.5s ease;
+}
+
+.error-state {
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 120px 15px 40px;
+    }
+
+    .dashboard-header-wrapper {
+        padding: 20px;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .travel-options-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- New Minimal Pass Design (Per User Request) --- */
+
+/* --- New Premium Pass Design --- */
+.pass-card-container {
+    perspective: 1000px;
+    margin-bottom: 30px;
+}
+
+.pass-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 24px;
+    box-shadow:
+        0 20px 40px -10px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    max-width: 400px;
+    margin: 0 auto;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.pass-card:hover {
+    transform: translateY(-5px);
+    box-shadow:
+        0 30px 60px -12px rgba(31, 122, 90, 0.15),
+        0 0 0 1px rgba(31, 122, 90, 0.1);
+}
+
+/* Status Strip at Top */
+.pass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 100%);
+}
+
+.pass-header-minimal {
+    padding: 32px 32px 10px;
+    background: transparent;
+    text-align: center;
+}
+
+.brand-title {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 2px;
+    margin: 0;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.pass-title {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 5px 0 0 0;
+    letter-spacing: -1px;
+}
+
+.pass-body-minimal {
+    padding: 20px 32px 32px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+/* Updated Button Style */
+.btn-download-minimal {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: white;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(31, 122, 90, 0.3);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-download-minimal:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(31, 122, 90, 0.4);
+}
+
+.btn-download-minimal:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.qr-container-minimal {
+    background: white;
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow:
+        0 10px 25px -5px rgba(0, 0, 0, 0.05),
+        0 0 0 1px rgba(0, 0, 0, 0.03);
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    border: none;
+    /* Removed thick border */
+}
+
+.student-details-minimal {
+    text-align: center;
+    width: 100%;
+}
+
+.student-name {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+}
+
+.student-roll {
+    font-family: 'Inter', monospace;
+    font-size: 14px;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 0 0 10px 0;
+    font-weight: 600;
+}
+
+.student-meta {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.student-meta span {
+    background: rgba(148, 163, 184, 0.1);
+    padding: 2px 10px;
+    border-radius: 12px;
+}
+
+.profile-photo-container {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid white;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.profile-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-photo-placeholder {
+    color: #94a3b8;
+}
+
+.pass-id-minimal {
+    position: absolute;
+    bottom: 85px;
+    right: 32px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 1px;
+}
+
+.validity-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top: 1px dashed #e2e8f0;
+    border-bottom: 1px dashed #e2e8f0;
+    padding: 15px 0;
+    width: 100%;
+}
+
+.validity-block .label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.validity-block .date {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.status-badge-minimal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #15803d;
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(187, 247, 208, 0.5);
+    margin-top: 5px;
+}
+
+.info-box-minimal {
+    background: #f9fafb;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px dashed #e5e7eb;
+    margin-top: 10px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+    text-align: center;
+    width: 48%;
+}
+
+.info-item svg {
+    color: #4b5563;
+}
+
+.btn-download-minimal {
+    width: 100%;
+    background: #1f2937;
+    /* Dark Navy/Black */
+    color: white;
+    padding: 18px;
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: capitalize;
+    border: none;
+    border-radius: 0 0 32px 32px;
+    /* Rounded only at bottom to cap off the card */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s;
+}
+
+.btn-download-minimal:hover {
+    background: #111827;
+}
+
+/* Enhancing 'Apply for New Pass' Button */
+.btn-primary-large {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 18px 32px;
+    border-radius: 16px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    width: 100%;
+    justify-content: center;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary-large:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 35px -5px rgba(37, 99, 235, 0.5);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.btn-primary-large:active {
+    transform: translateY(-2px);
+}

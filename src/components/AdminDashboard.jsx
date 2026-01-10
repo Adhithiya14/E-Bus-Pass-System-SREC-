@@ -1,0 +1,861 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+    Scan,
+    CheckCircle,
+    XCircle,
+    ArrowLeft,
+    Settings,
+    Users,
+    FileText,
+    Check,
+    X,
+    Eye,
+    Bus,
+    Download,
+    Search,
+    RotateCw,
+    BarChart3,
+    TrendingUp,
+    AlertTriangle,
+    Clock,
+    Loader2
+} from 'lucide-react';
+import './AdminDashboard.css';
+import ProfileSettings from './ProfileSettings';
+import { safeFetch } from '../utils/api';
+
+const AdminDashboard = ({ user, onLogout, onUpdateUser }) => {
+    const [activeTab, setActiveTab] = useState('verifier');
+    const [scanResult, setScanResult] = useState(null);
+    const [studentId, setStudentId] = useState('');
+    const [isScanning, setIsScanning] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+
+    // Data states
+    const [students, setStudents] = useState([]);
+    const [applications, setApplications] = useState([]);
+    const [routes, setRoutes] = useState([]);
+    const [stats, setStats] = useState({ totalStudents: 0, activePasses: 0, pendingApplications: 0, totalApplications: 0 });
+    const [filters, setFilters] = useState({ department: 'All', year: 'All' });
+    const [selectedRoute, setSelectedRoute] = useState('All');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [selectedDoc, setSelectedDoc] = useState(null);
+    const [newRoute, setNewRoute] = useState({ route_number: '', route_name: '', stops: '', timings: '', bus_number: '' });
+    const [editingRoute, setEditingRoute] = useState(null);
+    const [rejectionModal, setRejectionModal] = useState({ isOpen: false, passId: null, reason: '' });
+
+    // New State for Route Requests
+    const [routeRequests, setRouteRequests] = useState([]);
+
+    const fetchStats = useCallback(async () => {
+        try {
+            const data = await safeFetch('/api/admin/stats');
+            setStats(data);
+        } catch (err) { }
+    }, []);
+
+    const fetchRoutes = useCallback(async () => {
+        try {
+            const data = await safeFetch('/api/routes');
+            setRoutes(data);
+        } catch (err) { }
+    }, []);
+
+    const fetchRouteRequests = useCallback(async () => {
+        try {
+            const data = await safeFetch('/api/admin/route-change-requests');
+            setRouteRequests(data);
+        } catch (err) { }
+    }, []);
+
+    const fetchStudents = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await safeFetch('/api/admin/students');
+            setStudents(data);
+        } catch (err) {
+            console.error("Error fetching students:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const fetchApplications = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await safeFetch('/api/admin/applications');
+            setApplications(data);
+        } catch (err) {
+            console.error("Error fetching applications:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const handleRequestStatus = async (requestId, status) => {
+        if (!window.confirm(`Are you sure you want to ${status} this request?`)) return;
+        try {
+            await safeFetch('/api/admin/route-change-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requestId, status })
+            });
+            fetchRouteRequests();
+        } catch (err) {
+            alert("Failed: " + err.message);
+        }
+    };
+
+    const handleUpdateStatus = async (id, status, reason = '') => {
+        try {
+            await safeFetch('/api/admin/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ passId: id, status, reason })
+            });
+            fetchApplications();
+            fetchStats();
+            setRejectionModal({ isOpen: false, passId: null, reason: '' });
+        } catch (err) {
+            alert("Update failed: " + err.message);
+        }
+    };
+
+    useEffect(() => {
+        fetchStats();
+        if (activeTab === 'records') fetchStudents();
+        if (activeTab === 'approvals') fetchApplications();
+        if (activeTab === 'routes') fetchRoutes();
+        if (activeTab === 'requests') fetchRouteRequests();
+    }, [activeTab]);
+
+    const filteredStudents = students.filter(s => {
+        const matchesDept = filters.department === 'All' || s.department === filters.department;
+        const matchesYear = filters.year === 'All' || s.year === filters.year;
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = s.name.toLowerCase().includes(searchLower) ||
+            s.roll_number.toLowerCase().includes(searchLower);
+        return matchesDept && matchesYear && matchesSearch;
+    });
+
+    const handleSimulateScan = async () => {
+        if (!studentId) return;
+        setIsScanning(true);
+        setScanResult(null);
+
+        try {
+            const isQR = studentId.includes('PASS-') || studentId.includes('PASS_ID:') || studentId.includes('QRI_');
+
+            if (isQR) {
+                // Use the new Live Verification endpoint
+                const res = await fetch('/api/pass/verify-live', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        qrString: studentId,
+                        routeNumber: selectedRoute === 'All' ? null : selectedRoute
+                    })
+                });
+                const data = await res.json();
+                setScanResult(data);
+            } else {
+                // Manual Verification (Roll No / ID)
+                const res = await fetch('/api/pass/verify-manual', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: studentId })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setScanResult(data);
+                } else {
+                    const errData = await res.json();
+                    setScanResult(errData);
+                }
+            }
+        } catch (err) {
+            setScanResult({ valid: false, message: 'Connection Error' });
+        } finally {
+            setIsScanning(false);
+        }
+    };
+
+    const handleAddRoute = async (e) => {
+        e.preventDefault();
+        try {
+            const url = editingRoute ? `/api/routes/${editingRoute.id}` : '/api/routes';
+            const method = editingRoute ? 'PUT' : 'POST';
+
+            await safeFetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRoute)
+            });
+
+            setNewRoute({ route_number: '', route_name: '', stops: '', timings: '', bus_number: '' });
+            setEditingRoute(null);
+            fetchRoutes();
+        } catch (err) {
+            alert("Operation failed: " + err.message);
+        }
+    };
+
+    const handleEditRoute = (route) => {
+        setEditingRoute(route);
+        setNewRoute({
+            route_number: route.route_number,
+            route_name: route.route_name,
+            stops: route.stops,
+            timings: route.timings || '',
+            bus_number: route.bus_number || ''
+        });
+    };
+
+    const handleDeleteRoute = async (id) => {
+        if (!window.confirm("Delete this route?")) return;
+        try {
+            await safeFetch(`/api/routes/${id}`, { method: 'DELETE' });
+            fetchRoutes();
+        } catch (err) {
+            alert("Delete failed: " + err.message);
+        }
+    };
+
+    const handleExport = () => {
+        const headers = ["Name", "Roll No", "Dept", "Year", "Email", "Status"];
+        const rows = students.map(s => [s.name, s.roll_number, s.department, s.year, s.email, s.pass_status || 'No Pass']);
+        const csvContent = "data:text/csv;charset=utf-8,"
+            + headers.join(",") + "\n"
+            + rows.map(r => r.join(",")).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "student_pass_records.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    return (
+        <div className="admin-dashboard">
+            <div className="container dashboard-container-admin">
+                <div className="dashboard-header-wrapper">
+                    <div className="admin-header">
+                        <div className="header-info">
+                            <h1>Admin Dashboard</h1>
+                            <p>Logged in as: {user.name} (Administrator)</p>
+                        </div>
+                        <div className="header-actions">
+                            <button className="settings-toggle-btn" onClick={() => setShowSettings(true)} title="Profile Settings">
+                                {user.profile_pic ? (
+                                    <img src={user.profile_pic} alt="Profile" className="header-avatar" />
+                                ) : (
+                                    <Settings size={28} />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="admin-tabs">
+                    <button className={`tab-btn ${activeTab === 'verifier' ? 'active' : ''}`} onClick={() => setActiveTab('verifier')}>
+                        <Scan size={18} /> Pass Verifier
+                    </button>
+                    <button className={`tab-btn ${activeTab === 'approvals' ? 'active' : ''}`} onClick={() => setActiveTab('approvals')}>
+                        <FileText size={18} /> Approval Requests
+                    </button>
+                    <button className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`} onClick={() => setActiveTab('requests')}>
+                        <RotateCw size={18} /> Route Requests
+                    </button>
+                    <button className={`tab-btn ${activeTab === 'routes' ? 'active' : ''}`} onClick={() => setActiveTab('routes')}>
+                        <Bus size={18} /> Routes
+                    </button>
+                    <button className={`tab-btn ${activeTab === 'records' ? 'active' : ''}`} onClick={() => setActiveTab('records')}>
+                        <Users size={18} /> Student Records
+                    </button>
+                    <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
+                        <BarChart3 size={18} /> Analytics
+                    </button>
+                    <button className={`tab-btn ${activeTab === 'emergency' ? 'active' : ''}`} onClick={() => setActiveTab('emergency')}>
+                        <AlertTriangle size={18} /> Emergency
+                    </button>
+                </div>
+
+                {activeTab === 'verifier' && (
+                    <div className="scanner-section">
+                        <div className="stats-grid">
+                            <div className="stat-card">
+                                <span className="stat-value">{stats.totalApplications}</span>
+                                <span className="stat-label">Total Applications</span>
+                            </div>
+                            <div className="stat-card">
+                                <span className="stat-value">{stats.pendingApplications}</span>
+                                <span className="stat-label">Pending Approvals</span>
+                            </div>
+                            <div className="stat-card">
+                                <span className="stat-value">{stats.activePasses}</span>
+                                <span className="stat-label">Active Passes</span>
+                            </div>
+                        </div>
+
+                        <div className="scanner-box">
+                            <div className="scan-icon-pulse"><Scan size={64} /></div>
+                            <h2>Pass Verifier</h2>
+                            <p>Enter Student ID or QR String to verify</p>
+                            <div className="verify-controls">
+                                <div className="route-select-wrapper">
+                                    <Bus size={18} />
+                                    <select value={selectedRoute} onChange={(e) => setSelectedRoute(e.target.value)}>
+                                        <option value="All">All Routes</option>
+                                        {routes.map(r => (
+                                            <option key={r.id} value={r.route_number}>Route {r.route_number}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Enter Student ID or QR String"
+                                    value={studentId}
+                                    onChange={(e) => setStudentId(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSimulateScan()}
+                                />
+                                <button className="btn-verify" onClick={handleSimulateScan} disabled={isScanning}>
+                                    {isScanning ? 'Verifying...' : 'Verify Pass'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {scanResult && (
+                            <div className={`scan-result-card ${scanResult.valid ? 'valid' : (scanResult.type === 'warning' ? 'warning' : 'invalid')}`}>
+                                <div className="result-icon">
+                                    {scanResult.valid ? <CheckCircle size={48} /> : <XCircle size={48} />}
+                                </div>
+                                <h3>{scanResult.message}</h3>
+                                {scanResult.data && scanResult.data.profile_pic && (
+                                    <div className="scan-photo-wrapper">
+                                        <img
+                                            src={scanResult.data.profile_pic}
+                                            alt="Student Photo"
+                                            className="scan-result-photo"
+                                        />
+                                    </div>
+                                )}
+                                <p>{scanResult.valid ? `Pass sequence verified for student` : 'Scanning security check failed'}</p>
+                                {scanResult.subMessage && <p className="sub-message">{scanResult.subMessage}</p>}
+                                {scanResult.valid && (
+                                    <div className="result-details">
+                                        <div className="student-main-info">
+                                            <div className="res-name">{scanResult.data.name}</div>
+                                            <div className="res-roll">Roll: {scanResult.data.roll_number}</div>
+                                        </div>
+                                        <div className="student-sub-info">
+                                            <span>{scanResult.data.department}</span>
+                                            <span className="dot"></span>
+                                            <span>{scanResult.data.year}</span>
+                                        </div>
+                                        <div className="expiry-tag">
+                                            Expires: {new Date(scanResult.data.valid_until).toLocaleDateString()}
+                                        </div>
+                                        Rides: {scanResult.data.usage_count} / {scanResult.data.usage_limit}
+                                    </div>
+                                )}
+                                {scanResult.data && scanResult.data.secondary_routes && scanResult.data.secondary_routes.length > 0 && (
+                                    <div className="allowed-routes-tag" style={{ marginTop: '8px', fontSize: '12px', color: '#64748b' }}>
+                                        <strong>Authorized Interchanges:</strong> {scanResult.data.secondary_routes.join(', ')}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+
+                {activeTab === 'approvals' && (
+                    <div className="approvals-section">
+                        <div className="section-header">
+                            <h3>Pending Applications</h3>
+                            <span className="count-badge">{applications.filter(a => a.status === 'pending').length} Pending</span>
+                        </div>
+                        <div className="records-table-container">
+                            <table className="records-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student Details</th>
+                                        <th>Academic Info</th>
+                                        <th>Route & Duration</th>
+                                        <th>Applied Date</th>
+                                        <th>Documents</th>
+                                        <th>Payment</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {loading ? (
+                                        <tr><td colSpan="7">Loading applications...</td></tr>
+                                    ) : applications.length > 0 ? (
+                                        applications.map(app => (
+                                            <tr key={app.id} className={app.status}>
+                                                <td>
+                                                    <div className="student-name-cell">
+                                                        {app.name}
+                                                        <span className="student-email">{app.roll_number}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="academic-info-cell">
+                                                        <span className="dept-badge">{app.department}</span>
+                                                        <span className="year-val">{app.year}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="boarding-info">
+                                                        <strong>{app.boarding_point}</strong>
+                                                        <div className="sub">{app.duration} ({app.route_number || 'N/A'})</div>
+                                                        {app.secondary_routes && app.secondary_routes.length > 0 && (
+                                                            <div className="sub-routes" style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                                                                + Interchanges: {app.secondary_routes.join(', ')}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="date-cell">
+                                                    {new Date(app.applied_at).toLocaleDateString()}
+                                                </td>
+                                                <td>
+                                                    <div className="doc-btns">
+                                                        <button onClick={() => setSelectedDoc({ type: 'ID Proof', data: app.id_proof })} title="View ID Proof"><FileText size={14} /> ID</button>
+                                                        {app.photo && (
+                                                            <button onClick={() => setSelectedDoc({ type: 'Photo', data: app.photo })} title="View Photo" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                <img src={app.photo} alt="Thumb" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
+                                                                <Eye size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="payment-cell-admin">
+                                                        <span className={`status-pill ${app.payment_status}`}>
+                                                            {app.payment_status.toUpperCase()}
+                                                        </span>
+                                                        <span className="pay-amt">₹{app.amount}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {app.status === 'pending' ? (
+                                                        <div className="action-btns">
+                                                            <button
+                                                                className={`approve-btn ${app.payment_status !== 'paid' ? 'disabled' : ''}`}
+                                                                onClick={() => app.payment_status === 'paid' && handleUpdateStatus(app.id, 'active')}
+                                                                title={app.payment_status === 'paid' ? "Approve" : "Cannot Approve: Payment Pending"}
+                                                                disabled={app.payment_status !== 'paid'}
+                                                            >
+                                                                <Check size={16} />
+                                                            </button>
+                                                            <button className="reject-btn" onClick={() => setRejectionModal({ isOpen: true, passId: app.id, reason: '' })} title="Reject"><X size={16} /></button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className={`status-pill ${app.status}`}>{app.status.toUpperCase()}</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="7">No applications found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'routes' && (
+                    <div className="routes-section">
+                        <div className="section-header">
+                            <h3>Bus Route Management</h3>
+                        </div>
+                        <div className="route-management-grid">
+                            <div className="add-route-card">
+                                <h4>{editingRoute ? 'Edit Route' : 'Add New Route'}</h4>
+                                <form onSubmit={handleAddRoute}>
+                                    <div className="form-group-admin">
+                                        <label>Route #</label>
+                                        <input type="text" value={newRoute.route_number} onChange={e => setNewRoute({ ...newRoute, route_number: e.target.value })} placeholder="e.g. 101" required />
+                                    </div>
+                                    <div className="form-group-admin">
+                                        <label>Route Name</label>
+                                        <input type="text" value={newRoute.route_name} onChange={e => setNewRoute({ ...newRoute, route_name: e.target.value })} placeholder="Green Valley Route" required />
+                                    </div>
+                                    <div className="form-row-admin">
+                                        <div className="form-group-admin">
+                                            <label>Bus Number</label>
+                                            <input type="text" value={newRoute.bus_number} onChange={e => setNewRoute({ ...newRoute, bus_number: e.target.value })} placeholder="TN-37-B-1234" />
+                                        </div>
+                                        <div className="form-group-admin">
+                                            <label>Timings</label>
+                                            <input type="text" value={newRoute.timings} onChange={e => setNewRoute({ ...newRoute, timings: e.target.value })} placeholder="07:30 AM - 05:00 PM" />
+                                        </div>
+                                    </div>
+                                    <div className="form-group-admin">
+                                        <label>Stops (Comma separated)</label>
+                                        <textarea value={newRoute.stops} onChange={e => setNewRoute({ ...newRoute, stops: e.target.value })} placeholder="Main Gate, Library, Hostels" required />
+                                    </div>
+                                    <div className="form-actions-admin">
+                                        <button type="submit" className="btn-add-route">{editingRoute ? 'Update Route' : 'Add Route'}</button>
+                                        {editingRoute && <button type="button" className="btn-cancel-edit" onClick={() => {
+                                            setEditingRoute(null);
+                                            setNewRoute({ route_number: '', route_name: '', stops: '', timings: '', bus_number: '' });
+                                        }}>Cancel</button>}
+                                    </div>
+                                </form>
+                            </div>
+                            <div className="routes-list-card">
+                                <h4>Available Routes</h4>
+                                <div className="routes-v-list">
+                                    {routes.map(r => (
+                                        <div key={r.id} className="route-v-item">
+                                            <div className="r-main">
+                                                <div className="r-head">
+                                                    <span className="r-num">#{r.route_number}</span>
+                                                    <span className="r-name">{r.route_name}</span>
+                                                </div>
+                                                <div className="r-details">
+                                                    <div className="r-detail-item"><Bus size={12} /> {r.bus_number || 'No Bus Assigned'}</div>
+                                                    <div className="r-detail-item"><Clock size={12} /> {r.timings || 'No Timings Set'}</div>
+                                                </div>
+                                                <div className="r-stops">{r.stops}</div>
+                                            </div>
+                                            <div className="r-actions">
+                                                <button onClick={() => handleEditRoute(r)} title="Edit"><Settings size={14} /></button>
+                                                <button onClick={() => handleDeleteRoute(r.id)} title="Delete" className="del-btn"><X size={14} /></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'analytics' && (
+                    <div className="analytics-section">
+                        <div className="section-header">
+                            <h3>System Insights & Usage</h3>
+                            <button className="refresh-btn" onClick={fetchStats}><RotateCw size={16} /> Update Data</button>
+                        </div>
+
+                        <div className="analytics-grid">
+                            <div className="analytics-card main-stat">
+                                <div className="stat-icon-bg"><TrendingUp size={24} /></div>
+                                <div className="stat-content">
+                                    <span className="stat-title">Active Passes</span>
+                                    <span className="stat-value">{stats.activePasses}</span>
+                                    <p className="stat-desc">Currently valid for travel</p>
+                                </div>
+                            </div>
+                            <div className="analytics-card warning-stat">
+                                <div className="stat-icon-bg"><AlertTriangle size={24} /></div>
+                                <div className="stat-content">
+                                    <span className="stat-title">Expired/Rejected</span>
+                                    <span className="stat-value">{stats.expiredPasses || 0}</span>
+                                    <p className="stat-desc">Inactive or outdated passes</p>
+                                </div>
+                            </div>
+                            <div className="analytics-card info-stat">
+                                <div className="stat-icon-bg"><FileText size={24} /></div>
+                                <div className="stat-content">
+                                    <span className="stat-title">App Success Rate</span>
+                                    <span className="stat-value">
+                                        {stats.totalApplications > 0
+                                            ? Math.round((stats.activePasses / stats.totalApplications) * 100)
+                                            : 0}%
+                                    </span>
+                                    <p className="stat-desc">Approval relative to total apps</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="route-usage-container">
+                            <h4>Route-wise Scanning Activity</h4>
+                            <p className="sub-header">Total scans recorded per bus route</p>
+                            <div className="usage-bars-list">
+                                {stats.routeUsage && stats.routeUsage.length > 0 ? (
+                                    stats.routeUsage.map(route => {
+                                        const maxScans = Math.max(...stats.routeUsage.map(r => r.scan_count), 1);
+                                        const percentage = Math.round((route.scan_count / maxScans) * 100);
+                                        return (
+                                            <div key={route.route_number} className="usage-row">
+                                                <div className="usage-info">
+                                                    <span className="u-route">Route {route.route_number}</span>
+                                                    <span className="u-name">{route.route_name}</span>
+                                                    <span className="u-count">{route.scan_count} Scans</span>
+                                                </div>
+                                                <div className="usage-bar-bg">
+                                                    <div className="usage-bar-fill" style={{ width: `${percentage}%` }}></div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="no-data-msg">No scan data available yet.</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {activeTab === 'records' && (
+                    <div className="records-section">
+                        <div className="records-filters-container">
+                            <div className="search-box-admin">
+                                <Search size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Search by Name or Roll Number..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <div className="filter-group-admin">
+                                <select value={filters.department} onChange={(e) => setFilters({ ...filters, department: e.target.value })}>
+                                    <option value="All">All Departments</option>
+                                    <option value="CSE">CSE</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="ME">ME</option>
+                                    <option value="CIVIL">CIVIL</option>
+                                </select>
+                                <select value={filters.year} onChange={(e) => setFilters({ ...filters, year: e.target.value })}>
+                                    <option value="All">All Years</option>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year">3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                </select>
+                                <button className="refresh-btn" onClick={fetchStudents} title="Refresh Records"><RotateCw size={16} /></button>
+                                <button className="export-btn" onClick={handleExport}><Download size={16} /> Export</button>
+                            </div>
+                        </div>
+                        <div className="records-table-container">
+                            <table className="records-table">
+                                <thead>
+                                    <tr>
+                                        <th>Roll No</th>
+                                        <th>Name</th>
+                                        <th>Dept / Year</th>
+                                        <th>Pass Status</th>
+                                        <th>Valid Until</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {loading ? (
+                                        <tr><td colSpan="5">Loading students...</td></tr>
+                                    ) : filteredStudents.map(student => (
+                                        <tr key={student.id}>
+                                            <td>{student.roll_number}</td>
+                                            <td>
+                                                <div className="student-name-cell">
+                                                    {student.name}
+                                                    <span className="student-email">{student.email}</span>
+                                                </div>
+                                            </td>
+                                            <td>{student.department} / {student.year}</td>
+                                            <td>
+                                                <span className={`status-pill ${student.pass_status || 'none'}`}>
+                                                    {(student.pass_status || 'No Pass').toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td>{student.valid_until ? new Date(student.valid_until).toLocaleDateString() : 'N/A'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'requests' && (
+                    <div className="requests-section">
+                        <div className="section-header">
+                            <h3>Temporary Route Change Requests</h3>
+                            <span className="count-badge">{routeRequests.filter(r => r.status === 'pending').length} Pending</span>
+                        </div>
+
+                        <div className="requests-grid">
+                            {routeRequests.map(req => (
+                                <div key={req.id} className="request-card-admin">
+                                    <div className="req-header">
+                                        <span className={`status-pill ${req.status}`}>{req.status}</span>
+                                        <span className="req-date">{new Date(req.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="req-body">
+                                        <h4>{req.name} <span className="sub-text">({req.roll_number})</span></h4>
+                                        <div className="route-change-arrow">
+                                            <span className="route-pill">#{req.original_route || 'N/A'}</span>
+                                            <span className="arrow">➔</span>
+                                            <span className="route-pill highlight">#{req.new_route}</span>
+                                        </div>
+                                        <div className="trip-info">
+                                            <strong>Travel Date:</strong> {new Date(req.travel_date).toLocaleDateString()}
+                                        </div>
+                                        <p className="req-reason">"{req.reason}"</p>
+                                    </div>
+                                    {req.status === 'pending' && (
+                                        <div className="req-actions">
+                                            <button className="btn-reject-sm" onClick={() => handleRequestStatus(req.id, 'rejected')}>
+                                                <XCircle size={16} /> Reject
+                                            </button>
+                                            <button className="btn-approve-sm" onClick={() => handleRequestStatus(req.id, 'approved')}>
+                                                <CheckCircle size={16} /> Approve
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            {routeRequests.length === 0 && <p className="no-data">No route change requests found.</p>}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'emergency' && (
+                    <div className="emergency-section">
+                        <div className="section-header">
+                            <h3>Emergency Access Management</h3>
+                            <span className="badge-warning">Restricted Access</span>
+                        </div>
+                        <div className="emergency-grid">
+                            <div className="emergency-form-card">
+                                <h4>Issue One-Day Pass</h4>
+                                <p>Generate an instant QR pass for a student who missed renewal or has a valid reason.</p>
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const formData = new FormData(e.target);
+                                    const studentRollNo = formData.get('rollNo');
+                                    const travelDate = formData.get('date');
+                                    const routeNumber = formData.get('route');
+
+                                    try {
+                                        const data = await safeFetch('/api/admin/emergency-pass', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ studentRollNo, routeNumber, travelDate })
+                                        });
+                                        alert(data.message || "Pass Issued Successfully");
+                                    } catch (err) {
+                                        alert("Error: " + err.message);
+                                    }
+                                }}>
+                                    <div className="form-group-admin">
+                                        <label>Student Roll Number</label>
+                                        <input name="rollNo" type="text" placeholder="e.g. 21CSE101" required />
+                                    </div>
+                                    <div className="form-group-admin">
+                                        <label>Travel Date</label>
+                                        <input name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
+                                    </div>
+                                    <div className="form-group-admin">
+                                        <label>Route</label>
+                                        <select name="route">
+                                            {routes.map(r => <option key={r.id} value={r.route_number}>Route {r.route_number}</option>)}
+                                        </select>
+                                    </div>
+                                    <button type="submit" className="btn-issue-emergency">Issue Emergency Pass</button>
+                                </form>
+                            </div>
+
+                            <div className="otp-verifier-card">
+                                <h4>Verify Emergency OTP</h4>
+                                <p>Validate one-time codes generated by students.</p>
+                                <div className="otp-input-group">
+                                    <input type="text" id="otp-input" placeholder="Enter 4-digit OTP" maxLength="4" />
+                                    <button className="btn-verify-otp" onClick={async () => {
+                                        const otp = document.getElementById('otp-input').value;
+                                        // Need user ID for strict check, but for demo simpler:
+                                        // In real app, Admin asks for Roll No too.
+                                        // Here we assume "Student ID" search was done or we add a field.
+                                        // Let's add a prompt for ID:
+                                        const rollNo = prompt("Enter Student Roll Number for OTP Verification:");
+                                        if (!rollNo) return;
+
+                                        // Get User ID first
+                                        try {
+                                            const allStudents = await safeFetch('/api/admin/students');
+                                            const student = allStudents.find(s => s.roll_number === rollNo);
+
+                                            if (!student) { alert("Student not found"); return; }
+
+                                            const data = await safeFetch('/api/auth/otp/verify', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ userId: student.id, otp })
+                                            });
+                                            alert(data.message);
+                                        } catch (err) {
+                                            alert("Verification Failed: " + err.message);
+                                        }
+                                    }}>Verify OTP</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+
+            {
+                showSettings && (
+                    <ProfileSettings
+                        user={user}
+                        onClose={() => setShowSettings(false)}
+                        onUpdateUser={onUpdateUser}
+                    />
+                )
+            }
+
+            {
+                rejectionModal.isOpen && (
+                    <div className="modal-overlay rejection-modal-overlay">
+                        <div className="modal-content rejection-modal">
+                            <h3>Rejection Reason</h3>
+                            <p>Provide a reason why this application is being rejected.</p>
+                            <textarea
+                                placeholder="e.g. ID proof is blurry, incorrect details..."
+                                value={rejectionModal.reason}
+                                onChange={(e) => setRejectionModal({ ...rejectionModal, reason: e.target.value })}
+                                autoFocus
+                            />
+                            <div className="modal-actions">
+                                <button className="btn-cancel-reject" onClick={() => setRejectionModal({ isOpen: false, passId: null, reason: '' })}>Cancel</button>
+                                <button
+                                    className="btn-confirm-reject"
+                                    onClick={() => handleUpdateStatus(rejectionModal.passId, 'rejected', rejectionModal.reason)}
+                                    disabled={!rejectionModal.reason.trim()}
+                                >
+                                    Confirm Rejection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
+                selectedDoc && (
+                    <div className="modal-overlay doc-preview-overlay">
+                        <div className="modal-content doc-modal">
+                            <button className="modal-close" onClick={() => setSelectedDoc(null)}><X size={24} /></button>
+                            <div className="doc-header">
+                                <h3>{selectedDoc.type} Preview</h3>
+                            </div>
+                            <div className="doc-view">
+                                <img src={selectedDoc.data} alt="Document" />
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
+    );
+};
+
+export default AdminDashboard;

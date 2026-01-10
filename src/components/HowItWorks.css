@@ -1,0 +1,107 @@
+.how-section {
+    padding: 100px 0;
+    background-color: var(--color-secondary);
+}
+
+.timeline-container {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 80px;
+    padding: 0 40px;
+}
+
+/* Connecting Line */
+.timeline-line {
+    position: absolute;
+    top: 30px;
+    left: 100px;
+    right: 100px;
+    height: 4px;
+    background: #e0e0e0;
+    z-index: 0;
+    border-radius: 2px;
+}
+
+/* Fill animation could be added here overlaying timeline-line */
+
+.timeline-step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    max-width: 300px;
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    background: var(--color-text);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    margin-bottom: 20px;
+    border: 4px solid white;
+    box-shadow: 0 0 0 4px var(--color-secondary);
+}
+
+.step-icon {
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+    transition: all 0.4s ease;
+}
+
+.timeline-step:hover .step-icon {
+    transform: translateY(-10px) scale(1.1);
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 15px 40px rgba(31, 122, 90, 0.3);
+}
+
+.step-content h3 {
+    font-size: 24px;
+    margin-bottom: 12px;
+    color: var(--color-primary);
+}
+
+.step-content p {
+    color: #666;
+    font-size: 16px;
+}
+
+/* Responsive Timeline */
+@media (max-width: 768px) {
+    .timeline-container {
+        flex-direction: column;
+        gap: 60px;
+        align-items: center;
+    }
+
+    .timeline-line {
+        width: 4px;
+        height: 80%;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .timeline-step {
+        flex-direction: column;
+        width: 100%;
+    }
+}

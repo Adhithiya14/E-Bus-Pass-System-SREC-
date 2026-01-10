@@ -1,0 +1,132 @@
+.routes-section {
+    padding: 100px 0;
+    background-color: #f9f9f9;
+}
+
+.routes-controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.search-bar {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 14px 14px 14px 48px;
+    border-radius: 30px;
+    border: 1px solid #ddd;
+    font-family: var(--font-body);
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+}
+
+.search-bar input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 6px 20px rgba(31, 122, 90, 0.15);
+}
+
+.routes-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    background: white;
+}
+
+.routes-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+    /* Ensure scroll on mobile */
+}
+
+.routes-table th {
+    background: var(--color-primary);
+    color: white;
+    padding: 16px 24px;
+    text-align: left;
+    font-family: var(--font-heading);
+    font-weight: 600;
+}
+
+.routes-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid #eee;
+    color: #444;
+}
+
+.routes-table tr:last-child td {
+    border-bottom: none;
+}
+
+.routes-table tr:nth-child(even) {
+    background-color: #f8faf9;
+}
+
+.routes-table tr:hover {
+    background-color: #f0fdf4;
+}
+
+.route-name {
+    font-weight: 600;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    margin-left: 8px;
+    box-shadow: 0 0 10px #4ade80;
+    animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.bus-badge {
+    background: var(--color-secondary);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #ddd;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+}

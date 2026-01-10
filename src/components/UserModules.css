@@ -1,0 +1,135 @@
+.modules-section {
+    padding: 100px 0;
+    background-color: white;
+}
+
+.modules-split {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.module-card {
+    flex: 1;
+    max-width: 500px;
+    background: #ffffff;
+    padding: 60px 40px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    min-width: 320px;
+    box-shadow: var(--shadow-premium);
+    position: relative;
+}
+
+.module-card:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.15);
+}
+
+.student-module:hover {
+    border-color: #3b82f6;
+    /* Student Blue-ish override or stick to Green? User didn't specify distinct color for student, I'll use Primary Green for both but maybe lighter for student */
+    border-color: var(--color-primary);
+}
+
+.admin-module:hover {
+    border-color: var(--color-text);
+    /* Admin darker */
+}
+
+.module-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.icon-badge {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    background: white;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.icon-badge.student {
+    color: var(--color-primary);
+}
+
+.icon-badge.admin {
+    color: var(--color-text);
+}
+
+.module-header h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.module-header p {
+    color: #666;
+}
+
+.module-features {
+    list-style: none;
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.module-features li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    color: var(--color-text-light);
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.module-card:hover .module-features li {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.03);
+}
+
+.btn-module {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    font-family: var(--font-button);
+}
+
+.student-btn {
+    background: transparent;
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+}
+
+.student-btn:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+.admin-btn {
+    background: var(--color-text);
+    border: 2px solid var(--color-text);
+    color: white;
+}
+
+.admin-btn:hover {
+    background: #000;
+    border-color: #000;
+}

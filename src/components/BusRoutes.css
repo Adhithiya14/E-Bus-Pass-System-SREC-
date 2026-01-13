@@ -130,3 +130,48 @@
     padding: 40px;
     color: #888;
 }
+
+.stops-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stop-item {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.stop-name {
+    color: #334155;
+    font-weight: 500;
+}
+
+.stop-time {
+    color: #1F7A5A;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.bus-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+.bus-number-badge {
+    background: #1F7A5A;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.bus-plate {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}

@@ -82,12 +82,20 @@ db.serialize(() => {
       db.get(`SELECT COUNT(*) as count FROM bus_routes`, (err, row) => {
         if (row && row.count === 0) {
           const defaultRoutes = [
-            ['101', 'Green Valley Route', 'Main Gate, Library, Hostels, Sports Complex'],
-            ['102', 'City Express', 'Railway Station, City Center, North Campus, Admin Block'],
-            ['103', 'South Line', 'South Gate, Engineering Dept, Medical Centre, Cafeteria']
+            { no: '101', name: 'Green Valley Route', stops: 'Main Gate, Library, Hostels, Sports Complex', timings: '07:30 AM - 05:00 PM', bus: 'TN-37-G-101' },
+            { no: '102', name: 'City Express', stops: 'Railway Station, City Center, North Campus, Admin Block', timings: '07:45 AM - 05:15 PM', bus: 'TN-37-C-102' },
+            { no: '103', name: 'South Line', stops: 'South Gate, Engineering Dept, Medical Centre, Cafeteria', timings: '08:00 AM - 05:30 PM', bus: 'TN-37-S-103' },
+            {
+              no: '3',
+              name: 'Nava India',
+              stops: 'Nava India, Lakshmi Mills (Airtel), Lakshmi Mills (DPF ST), Mani High School, Women’s Polytechnic, Gandhipuram, 100 Feet Road, Power House, Sivananda Colony, Housing Unit, Kavundampalayam (Signal), Cheran Nagar, Viswanathapuram',
+              timings: '07:27 AM, 07:30 AM, 07:32 AM, 07:34 AM, 07:36 AM, 07:40 AM, 07:43 AM, 07:46 AM, 07:48 AM, 07:55 AM, 08:00 AM, 08:01 AM, 08:05 AM',
+              bus: '3'
+            }
           ];
           defaultRoutes.forEach(r => {
-            db.run(`INSERT INTO bus_routes (route_number, route_name, stops) VALUES (?, ?, ?)`, r);
+            db.run(`INSERT INTO bus_routes (route_number, route_name, stops, timings, bus_number) VALUES (?, ?, ?, ?, ?)`,
+              [r.no, r.name, r.stops, r.timings, r.bus]);
           });
           console.log('✅ Default Bus Routes seeded');
         }

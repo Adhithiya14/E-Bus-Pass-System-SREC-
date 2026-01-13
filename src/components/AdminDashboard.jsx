@@ -96,7 +96,7 @@ const AdminDashboard = ({ user, onLogout, onUpdateUser }) => {
     const handleRequestStatus = async (requestId, status) => {
         if (!window.confirm(`Are you sure you want to ${status} this request?`)) return;
         try {
-            await safeFetch('/api/admin/route-change-status', {
+            await safeFetch('/api/admin/route-change/status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ requestId, status })

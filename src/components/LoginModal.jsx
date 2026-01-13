@@ -138,10 +138,29 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
             }
 
             if (isRegister) {
-                setIsRegister(false);
-                setSuccess('Registration successful! Please login.');
-                setFormData({ ...formData, password: '' });
+                // Keep the modal open in register mode
+                // Clear the form fields
+                setFormData({
+                    name: '',
+                    roll_number: '',
+                    department: '',
+                    year: '',
+                    email: '',
+                    phone_number: '',
+                    password: '',
+                    role: formData.role, // Maintain the selected role (likely student)
+                    gender: '',
+                    student_type: 'Day Scholar',
+                    bus_number: '',
+                    bus_stop_name: '',
+                    profile_pic: ''
+                });
+
+                // Show the specific success message
+                setSuccess('Registration successful. You can register a new student now.');
                 setError('');
+
+                // Optional: Scroll to top of form if needed, but message is at top
             } else {
                 // If login success, check if the returned user role matches the selected role
                 if (data.user.role !== formData.role) {

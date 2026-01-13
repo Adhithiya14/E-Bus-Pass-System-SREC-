@@ -65,13 +65,12 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
         const { name, value } = e.target;
 
         if (name === 'secondary_routes') {
-            // value will be the route number to toggle
             setFormData(prev => {
                 const current = prev.secondary_routes || [];
                 if (current.includes(value)) {
                     return { ...prev, secondary_routes: current.filter(r => r !== value) };
                 } else {
-                    if (current.length >= 2) return prev; // Max 2 limit
+                    if (current.length >= 2) return prev;
                     return { ...prev, secondary_routes: [...current, value] };
                 }
             });
@@ -83,16 +82,32 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
         if (name === 'route_number') {
             const selectedRoute = routes.find(r => r.route_number === value);
             if (selectedRoute) {
-                setAvailableStops(selectedRoute.stops.split(',').map(s => s.trim()));
-                // Reset secondary routes if primary changes to one of them (optional but cleaner)
+                const stopList = selectedRoute.stops.split(',').map(s => s.trim());
+                const timeList = selectedRoute.timings ? selectedRoute.timings.split(',').map(t => t.trim()) : [];
+
+                // Pair stops with timings
+                const pairedStops = stopList.map((stop, index) => ({
+                    stop,
+                    time: timeList[index] || 'N/A'
+                }));
+
+                setAvailableStops(pairedStops);
+
                 setFormData(prev => ({
                     ...prev,
                     bus_stop: '',
+                    boarding_point: '', // Reset boarding point
                     secondary_routes: (prev.secondary_routes || []).filter(r => r !== value)
                 }));
             } else {
                 setAvailableStops([]);
             }
+        }
+
+        // Auto-set boarding point text when stop is selected
+        if (name === 'bus_stop') {
+            // value is the stop name
+            setFormData(prev => ({ ...prev, boarding_point: value }));
         }
     };
 
@@ -136,7 +151,6 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
             });
 
             onApplySubmit(data);
-            // onClose(); // Handled by onApplySubmit in parent
         } catch (err) {
             setError(err.message || 'Failed to submit application');
         } finally {
@@ -166,7 +180,6 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
                     <p>Step {currentStep} of 2 - {currentStep === 1 ? 'Travel Details' : 'Document Upload'}</p>
                 </div>
 
-                {/* Step Indicator */}
                 <div className="step-indicator">
                     <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>
                         <div className="step-number">1</div>
@@ -182,24 +195,13 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
                 {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="apply-form">
-                    {/* Step 1: Travel Details */}
                     {currentStep === 1 && (
                         <div className="form-section">
                             <h3><MapPin size={18} /> Travel Details</h3>
+
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label>Boarding Point</label>
-                                    <input
-                                        type="text"
-                                        name="boarding_point"
-                                        placeholder="e.g. City Center"
-                                        value={formData.boarding_point}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Route Number</label>
+                                    <label>Route</label>
                                     <select
                                         name="route_number"
                                         value={formData.route_number}
@@ -209,25 +211,8 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
                                         <option value="">Select Route</option>
                                         {routes.map(route => (
                                             <option key={route.id} value={route.route_number}>
-                                                #{route.route_number} - {route.route_name}
+                                                Bus {route.route_number} - {route.route_name}
                                             </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Bus Stop</label>
-                                    <select
-                                        name="bus_stop"
-                                        value={formData.bus_stop}
-                                        onChange={handleChange}
-                                        disabled={!formData.route_number}
-                                        required
-                                    >
-                                        <option value="">Select Stop</option>
-                                        {availableStops.map((stop, idx) => (
-                                            <option key={idx} value={stop}>{stop}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -247,7 +232,33 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
                                 </div>
                             </div>
 
-                            {/* Secondary Routes Selection */}
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Boarding Point (Select Stop)</label>
+                                    <select
+                                        name="bus_stop"
+                                        value={formData.bus_stop}
+                                        onChange={handleChange}
+                                        disabled={!formData.route_number}
+                                        required
+                                    >
+                                        <option value="">Select Boarding Stop</option>
+                                        {availableStops.map((item, idx) => (
+                                            <option key={idx} value={item.stop}>
+                                                {item.stop} ({item.time})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Drop Location</label>
+                                    <div className="fixed-input-display">
+                                        <MapPin size={16} style={{ marginRight: '8px', color: '#1F7A5A' }} />
+                                        SREC Campus (Fixed)
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="form-row">
                                 <div className="form-group" style={{ flex: '1 1 100%' }}>
                                     <label>
@@ -306,7 +317,6 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
                         </div>
                     )}
 
-                    {/* Step 2: Document Upload */}
                     {currentStep === 2 && (
                         <div className="form-section">
                             <h3><Upload size={18} /> Document Upload</h3>
@@ -349,7 +359,6 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
                         </div>
                     )}
 
-                    {/* Navigation Buttons */}
                     <div className="form-navigation">
                         <button
                             type="button"

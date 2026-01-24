@@ -191,6 +191,28 @@ db.serialize(() => {
     }
   });
 
+  // Credentials Table
+  db.run(`CREATE TABLE IF NOT EXISTS credentials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER UNIQUE,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )`, (err) => {
+    if (!err) {
+      // Data Migration: Move existing passwords/emails to credentials table
+      db.all(`SELECT id, email, password FROM users WHERE email IS NOT NULL`, (err, rows) => {
+        if (rows && rows.length > 0) {
+          rows.forEach(user => {
+            db.run(`INSERT OR IGNORE INTO credentials (user_id, email, password) VALUES (?, ?, ?)`,
+              [user.id, user.email, user.password]);
+          });
+          console.log(`✅ Migrated ${rows.length} users to credentials table.`);
+        }
+      });
+    }
+  });
+
   // OTPs Table
   db.run(`CREATE TABLE IF NOT EXISTS otps (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -55,12 +55,18 @@ app.post('/api/register', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const sql = `INSERT INTO users (name, email, password, role, roll_number, department, year, phone_number, gender, student_type, bus_number, bus_stop_name, profile_pic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-        const params = [
+        // 1. Insert into users (Profile Data)
+        // Note: keeping email in users table for now as redundant or display, but auth is via credentials table. 
+        // Best practice: Remove sensitive data from users if pure separation is desired, but keeping email in users is common for profile display.
+        // However, the prompt asked to SEPARATE. So I will focus on 'credentials' having the auth truth.
+        // We will insert 'email' into users as well for easier fetching of profile, OR we can leave it null/empty there if we want strict separation.
+        // Let's keep email in users for profile display convenience, but rely on credentials for auth.
+        const sqlUser = `INSERT INTO users (name, email, role, roll_number, department, year, phone_number, gender, student_type, bus_number, bus_stop_name, profile_pic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        const paramsUser = [
             name,
-            normalizedEmail,
-            hashedPassword,
+            normalizedEmail, // Keeping copy in users for profile view
             role || 'student',
             roll_number,
             department,
@@ -73,15 +79,34 @@ app.post('/api/register', async (req, res) => {
             profile_pic
         ];
 
-        db.run(sql, params, function (err) {
-            if (err) {
-                if (err.message.includes('UNIQUE constraint failed')) {
-                    return res.status(400).json({ error: "Email or Roll Number already exists" });
+        db.serialize(() => {
+            db.run("BEGIN TRANSACTION");
+
+            db.run(sqlUser, paramsUser, function (err) {
+                if (err) {
+                    db.run("ROLLBACK");
+                    if (err.message.includes('UNIQUE constraint failed')) {
+                        // This might trigger if we keep email unique in users. 
+                        return res.status(400).json({ error: "Email or Roll Number already exists" });
+                    }
+                    return res.status(500).json({ error: "User Insert Failed: " + err.message });
                 }
-                return res.status(500).json({ error: err.message });
-            }
-            res.json({ id: this.lastID, message: "User registered successfully" });
+
+                const userId = this.lastID;
+                const sqlCreds = `INSERT INTO credentials (user_id, email, password) VALUES (?, ?, ?)`;
+
+                db.run(sqlCreds, [userId, normalizedEmail, hashedPassword], function (err) {
+                    if (err) {
+                        db.run("ROLLBACK");
+                        return res.status(500).json({ error: "Credential Insert Failed: " + err.message });
+                    }
+
+                    db.run("COMMIT");
+                    res.json({ id: userId, message: "User registered successfully" });
+                });
+            });
         });
+
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
@@ -103,15 +128,26 @@ app.post('/api/login', (req, res) => {
     let sql = "";
     let params = [];
 
+    // JOIN credentials table to get password
     if (role === 'admin') {
-        sql = `SELECT * FROM users WHERE email = ? AND role = 'admin'`;
+        sql = `SELECT u.*, c.password as valid_password 
+               FROM users u 
+               JOIN credentials c ON u.id = c.user_id 
+               WHERE c.email = ? AND u.role = 'admin'`;
         params = [identifier.toLowerCase()];
     } else if (role === 'student') {
-        sql = `SELECT * FROM users WHERE roll_number = ? AND role = 'student'`;
-        params = [identifier];
+        // Allow login by Roll Number OR Email
+        sql = `SELECT u.*, c.password as valid_password 
+               FROM users u 
+               JOIN credentials c ON u.id = c.user_id 
+               WHERE (u.roll_number = ? OR c.email = ?) AND u.role = 'student'`;
+        params = [identifier, identifier.toLowerCase()];
     } else {
-        // Fallback for generic or old flows: Check BOTH if role is unspecified
-        sql = `SELECT * FROM users WHERE (roll_number = ? OR email = ?)`;
+        // Fallback generic
+        sql = `SELECT u.*, c.password as valid_password 
+               FROM users u 
+               JOIN credentials c ON u.id = c.user_id 
+               WHERE (u.roll_number = ? OR c.email = ?)`;
         params = [identifier, identifier.toLowerCase()];
     }
 
@@ -119,7 +155,7 @@ app.post('/api/login', (req, res) => {
         if (err) return res.status(500).json({ error: "Database error" });
         if (!user) return res.status(400).json({ error: role === 'admin' ? "Admin account not found" : "User not found with this identifier" });
 
-        const match = await bcrypt.compare(password, user.password);
+        const match = await bcrypt.compare(password, user.valid_password); // Use aliased password column
         if (!match) return res.status(401).json({ error: "Incorrect password" });
 
         const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
@@ -224,7 +260,10 @@ app.post('/api/reset-password', async (req, res) => {
         const hashed = await bcrypt.hash(newPassword, 10);
 
         db.serialize(() => {
-            db.run(`UPDATE users SET password = ? WHERE id = ?`, [hashed, row.uid]);
+            // Update credentials table
+            db.run(`UPDATE credentials SET password = ? WHERE user_id = ?`, [hashed, row.uid]);
+            // Also update users table for legacy/fallback if needed, but primarily credentials now
+            // db.run(`UPDATE users SET password = ? WHERE id = ?`, [hashed, row.uid]); 
             db.run(`UPDATE otps SET status = 'used' WHERE id = ?`, [row.id]);
         });
 
@@ -243,15 +282,30 @@ app.post('/api/create-admin', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const sql = `INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'admin')`;
-        db.run(sql, [name, normalizedEmail, hashedPassword], function (err) {
-            if (err) {
-                if (err.message.includes('UNIQUE constraint failed')) {
-                    return res.status(400).json({ error: "Email already exists" });
+
+        db.serialize(() => {
+            db.run("BEGIN TRANSACTION");
+
+            const sqlUser = `INSERT INTO users (name, email, role) VALUES (?, ?, 'admin')`;
+            db.run(sqlUser, [name, normalizedEmail], function (err) {
+                if (err) {
+                    db.run("ROLLBACK");
+                    if (err.message.includes('UNIQUE constraint failed')) return res.status(400).json({ error: "Email already exists" });
+                    return res.status(500).json({ error: err.message });
                 }
-                return res.status(500).json({ error: err.message });
-            }
-            res.json({ id: this.lastID, message: "Admin account created successfully" });
+
+                const userId = this.lastID;
+                const sqlCreds = `INSERT INTO credentials (user_id, email, password) VALUES (?, ?, ?)`;
+
+                db.run(sqlCreds, [userId, normalizedEmail, hashedPassword], function (err) {
+                    if (err) {
+                        db.run("ROLLBACK");
+                        return res.status(500).json({ error: err.message });
+                    }
+                    db.run("COMMIT");
+                    res.json({ id: userId, message: "Admin account created successfully" });
+                });
+            });
         });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
@@ -277,15 +331,15 @@ app.put('/api/user/change-password', async (req, res) => {
         return res.status(400).json({ error: "Missing fields" });
     }
 
-    db.get(`SELECT password FROM users WHERE id = ?`, [userId], async (err, user) => {
+    db.get(`SELECT password FROM credentials WHERE user_id = ?`, [userId], async (err, creds) => {
         if (err) return res.status(500).json({ error: "Database error" });
-        if (!user) return res.status(404).json({ error: "User not found" });
+        if (!creds) return res.status(404).json({ error: "User credentials not found" });
 
-        const match = await bcrypt.compare(currentPassword, user.password);
+        const match = await bcrypt.compare(currentPassword, creds.password);
         if (!match) return res.status(401).json({ error: "Incorrect current password" });
 
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-        db.run(`UPDATE users SET password = ? WHERE id = ?`, [hashedNewPassword, userId], function (err) {
+        db.run(`UPDATE credentials SET password = ? WHERE user_id = ?`, [hashedNewPassword, userId], function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: "Password updated successfully" });
         });

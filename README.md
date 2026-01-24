@@ -46,6 +46,8 @@ Ensure the following are installed:
 
 ```bash
 git clone https://github.com/Adhithiya14/E-Bus-Pass-System-SREC-.git
+```
+
 
 ### 📂 Step 2: Go into the Project Folder
 
@@ -53,3 +55,41 @@ After cloning the repository, move into the project directory:
 
 ```bash
 cd E-Bus-Pass-System-SREC-
+```
+
+### 📦 Step 3: Install Dependencies
+
+Run the following command to install all required packages:
+
+```bash
+npm install
+```
+### 🖥️ Step 4: Start Backend Server
+
+Open a terminal in the project folder and run:
+
+```bash
+npm run server
+```
+
+Keep this terminal running.
+
+### 🌐 Step 5: Start Frontend
+
+Open a second terminal in the same project folder and run:
+
+```bash
+npm run dev
+```
+
+The application will open at:
+
+```text
+http://localhost:5173
+```
+
+### ⚠️ Notes
+
+- Ensure backend is running before accessing the frontend
+- Node modules are not included in the repository
+- Use MySQL credentials as configured in the backend

@@ -1,16 +1,55 @@
-# React + Vite
+# QRide – SREC Campus Bus System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+QRide is a web-based smart campus bus pass management system developed for Sri Ramakrishna Engineering College (SREC).  
+It digitizes bus pass issuance, verification, and route management using QR codes.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Key Features
 
-## React Compiler
+- Student registration with profile photo
+- Digital bus pass with QR code and unique pass ID
+- Regular bus pass and fee payment
+- Pay-per-ride ticket for occasional travel
+- Hosteller lite pass and emergency pass support
+- Route flexibility and alternate bus travel
+- Admin verification and approval dashboard
+- Fully paperless and secure system
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Technologies Used
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Frontend: React + Vite
+- Backend: Node.js with Express
+- Database: MySQL
+- QR Code based validation
+- HTML, CSS, JavaScript
+
+---
+
+## ▶️ How to Run the Project
+
+open two terminals : run the command " npm run server "
+and in another run " npm run dev "
+
+### 📌 Prerequisites
+
+Ensure the following are installed:
+- Node.js (v16 or above)
+- npm
+- Git (optional)
+
+---
+
+### 📥 Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/Adhithiya14/E-Bus-Pass-System-SREC-.git
+
+### 📂 Step 2: Go into the Project Folder
+
+After cloning the repository, move into the project directory:
+
+```bash
+cd E-Bus-Pass-System-SREC-

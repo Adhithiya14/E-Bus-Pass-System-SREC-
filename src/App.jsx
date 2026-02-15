@@ -18,6 +18,7 @@ import ScrollToTop from './components/ScrollToTop';
 import GlobalHeader from './components/GlobalHeader';
 import GlobalFooter from './components/GlobalFooter';
 import NotFound from './components/NotFound';
+import CheckerVerification from './components/CheckerVerification';
 
 // Landing Page Component to group all landing sections
 const LandingPage = ({ onOpenLogin }) => {
@@ -113,6 +114,7 @@ function InnerApp() {
             path="/admin"
             element={user && user.role === 'admin' ? <AdminDashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} /> : <Navigate to="/" />}
           />
+          <Route path="/verify-checker/:checkerId" element={<CheckerVerification />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

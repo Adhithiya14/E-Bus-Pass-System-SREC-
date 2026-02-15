@@ -22,9 +22,11 @@ import {
     AlertTriangle,
     Loader2,
     Ticket,
-    User
+    User,
+    Scan
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import html2canvas from 'html2canvas';
 import ProfileSettings from './ProfileSettings';
 import ApplyPassModal from './ApplyPassModal';
@@ -40,6 +42,43 @@ const LoadingOverlay = () => (
         <span>Processing...</span>
     </div>
 );
+
+const getDaysRemaining = (validUntil) => {
+    if (!validUntil) return null;
+    const today = new Date();
+    const expiry = new Date(validUntil);
+    const diffTime = expiry - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+};
+
+const CheckerScanner = ({ onScanResult }) => {
+    useEffect(() => {
+        const scanner = new Html5QrcodeScanner('reader', {
+            qrbox: { width: 250, height: 250 },
+            fps: 5,
+        });
+
+        scanner.render(onScanResult, (error) => {
+            // console.warn(error);
+        });
+
+        return () => {
+            scanner.clear().catch(error => {
+                console.error("Failed to clear scanner: ", error);
+            });
+        };
+    }, [onScanResult]);
+
+    return (
+        <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+            <div id="reader"></div>
+            <p style={{ textAlign: 'center', marginTop: '10px', fontSize: '14px', color: '#666' }}>
+                Position the official Admin/Checker QR code within the frame to verify.
+            </p>
+        </div>
+    );
+};
 
 const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
     // Top Level Safety Check
@@ -58,6 +97,10 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
     const [pass, setPass] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (pass) console.log('Current Pass Data:', pass);
+    }, [pass]);
     const [showSettings, setShowSettings] = useState(false);
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [showRouteModal, setShowRouteModal] = useState(false);
@@ -67,6 +110,8 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
     const [showNotifPanel, setShowNotifPanel] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [activeTab, setActiveTab] = useState('My Pass');
+    const [verificationStatus, setVerificationStatus] = useState(null); // { valid, name, message }
+    const [verifying, setVerifying] = useState(false);
 
     // New State for Route Requests & Tickets
     const [myRouteRequests, setMyRouteRequests] = useState([]);
@@ -213,6 +258,32 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
         }
     };
 
+    const handleCheckerScan = async (decodedText) => {
+        if (verifying) return;
+        setVerifying(true);
+        setVerificationStatus(null);
+
+        try {
+            // Extract checker_id from URL if it's a full verification link
+            // e.g., http://localhost:5173/verify-checker/CHK-AD-2-ABCDE
+            let checkerId = decodedText;
+            if (decodedText.includes('/verify-checker/')) {
+                checkerId = decodedText.split('/verify-checker/').pop();
+            }
+
+            const data = await safeFetch(`/api/checker/verify/${checkerId}`);
+            if (data && data.valid) {
+                setVerificationStatus({ valid: true, name: data.name, message: "Authorized Checker" });
+            } else {
+                setVerificationStatus({ valid: false, message: "Unauthorized Checker" });
+            }
+        } catch (err) {
+            setVerificationStatus({ valid: false, message: "Unauthorized Checker" });
+        } finally {
+            setVerifying(false);
+        }
+    };
+
 
 
     const initiateTicketPurchase = () => {
@@ -222,7 +293,7 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
         setPaymentModalData({
             type: 'ticket',
             title: 'Pay-Per-Ride Ticket',
-            amount: 20,
+            amount: 50,
             summary: [
                 { label: 'Type', value: 'Single Ride' },
                 { label: 'Route', value: `#${routeNum}` }
@@ -235,7 +306,7 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                         body: JSON.stringify({
                             userId: user.id,
                             routeNumber: routeNum,
-                            amount: 20
+                            amount: 50
                         })
                     });
                     fetchTickets();
@@ -404,10 +475,17 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                         My Pass
                     </button>
                     <button
-                        className={`tab-button ${activeTab === 'Flexible Travel' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('Flexible Travel')}
+                        className={`tab-button ${activeTab === 'Hostellers Pass' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('Hostellers Pass')}
                     >
-                        Flexible Travel
+                        Hostellers Pass
+                    </button>
+                    <button
+                        className={`tab-button ${activeTab === 'Verify Checker' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('Verify Checker')}
+                    >
+                        <Scan size={18} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                        Verify Checker
                     </button>
                 </div>
             </div>
@@ -421,11 +499,51 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                     <>
                         {activeTab === 'My Pass' && (
                             <div className="tab-pane active slide-in">
-                                {loading && (
-                                    <div className="loading-state">
-                                        <div className="spinner"></div>
-                                        <p>Loading Pass Details...</p>
-                                    </div>
+
+
+                                {!loading && pass && pass.status === 'active' && pass.valid_until && (
+                                    (() => {
+                                        const daysRemaining = getDaysRemaining(pass.valid_until);
+                                        if (daysRemaining !== null) {
+                                            if (daysRemaining < 0) {
+                                                return (
+                                                    <div className="expiration-alert expired" style={{
+                                                        backgroundColor: '#fee2e2',
+                                                        color: '#b91c1c',
+                                                        padding: '12px',
+                                                        borderRadius: '8px',
+                                                        marginBottom: '16px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '12px',
+                                                        border: '1px solid #fecaca'
+                                                    }}>
+                                                        <AlertCircle size={20} />
+                                                        <strong>Your bus pass has expired</strong>
+                                                    </div>
+                                                );
+                                            } else if (daysRemaining <= 7) {
+                                                const expiryDate = new Date(pass.valid_until).toLocaleDateString();
+                                                return (
+                                                    <div className="expiration-alert soon" style={{
+                                                        backgroundColor: '#fef3c7',
+                                                        color: '#b45309',
+                                                        padding: '12px',
+                                                        borderRadius: '8px',
+                                                        marginBottom: '16px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '12px',
+                                                        border: '1px solid #fcd34d'
+                                                    }}>
+                                                        <Clock size={20} />
+                                                        <strong>Your bus pass will expire on {expiryDate}</strong>
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                        return null;
+                                    })()
                                 )}
 
 
@@ -551,8 +669,8 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                                                             <span>{pass.boarding_point || 'City'}</span>
                                                         </div>
                                                         <div className="info-item">
-                                                            <Clock size={16} />
-                                                            <span>Route #{pass.route_number || 'N/A'}</span>
+                                                            <Bus size={16} />
+                                                            <span>Bus {pass.bus_number || 'Pending'} - {pass.boarding_point || 'City'}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -582,7 +700,7 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                                                 </div>
                                             </button>
 
-                                            <button className="action-card" onClick={() => initiateLitePurchase()}>
+                                            <button className="action-card" onClick={() => initiateTicketPurchase()}>
                                                 <div className="icon-box primary">
                                                     <Ticket size={20} />
                                                 </div>
@@ -597,45 +715,21 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                             </div>
                         )}
 
-                        {activeTab === 'Flexible Travel' && (
+                        {activeTab === 'Hostellers Pass' && (
                             <div className="flexible-travel-container animate-fade-in">
                                 <div className="section-header">
-                                    <h2>Smart Travel Options</h2>
-                                    <p>Choose the plan that fits your schedule.</p>
+                                    <h2>Hosteller's Pass</h2>
                                 </div>
 
                                 <div className="travel-options-grid">
                                     {/* Pay-Per-Ride Ticket */}
-                                    <div className="option-card">
+                                    <div className="option-card highlight" style={{ gridColumn: '1 / -1', maxWidth: '400px', margin: '0 auto' }}>
                                         <div className="option-icon">🎫</div>
                                         <h3>Pay-Per-Ride Ticket</h3>
                                         <p>Single trip ticket. Valid for 24 hours from purchase.</p>
-                                        <div className="price-tag">₹ 20 <span>/ Ride</span></div>
+                                        <div className="price-tag">₹ 50 <span>/ Ride</span></div>
                                         <button className="btn-option-primary" style={{ background: '#0f172a' }} onClick={initiateTicketPurchase}>
                                             Buy Ticket
-                                        </button>
-                                    </div>
-
-                                    {/* Hosteller Lite Pass */}
-                                    <div className="option-card highlight">
-                                        <div className="badge-recommended">RECOMMENDED</div>
-                                        <div className="option-icon">🎟️</div>
-                                        <h3>Hosteller Lite Pass</h3>
-                                        <p>Perfect for occasional travel. Get 10 rides valid for a month.</p>
-                                        <div className="price-tag">₹ 150 <span>/ 10 Rides</span></div>
-                                        <button className="btn-option-primary" onClick={initiateLitePurchase}>
-                                            Get Lite Pass
-                                        </button>
-                                    </div>
-
-                                    {/* Emergency OTP */}
-                                    <div className="option-card emergency">
-                                        <div className="option-icon">🆘</div>
-                                        <h3 >Emergency Access</h3>
-                                        <p>Forgot your phone or pass? Request a one-time use OTP.</p>
-                                        <div className="validity-tag">Valid for 5 mins</div>
-                                        <button className="btn-option-outline" onClick={initiateEmergencyOTP}>
-                                            Request OTP
                                         </button>
                                     </div>
                                 </div>
@@ -756,10 +850,69 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                                 onClose={() => setPaymentModalData(null)}
                                 paymentDetails={paymentModalData}
                                 onPaymentSuccess={async () => {
-                                    const success = await paymentModalData.apiCall();
                                     return success;
                                 }}
                             />
+                        )}
+
+                        {activeTab === 'Verify Checker' && (
+                            <div className="tab-pane active slide-in">
+                                <div className="no-pass-card" style={{ maxWidth: '600px', margin: '0 auto' }}>
+                                    <div className="no-pass-icon" style={{ background: '#f0f9ff', color: '#0369a1' }}>
+                                        <ShieldCheck size={48} />
+                                    </div>
+                                    <h3>Verify Bus Checker</h3>
+                                    <p>Scan the official QR code provided by the bus checker to verify their SREC authorization.</p>
+
+                                    {verificationStatus ? (
+                                        <div className={`verification-result-container ${verificationStatus.valid ? 'valid' : 'invalid'}`} style={{
+                                            marginTop: '24px',
+                                            padding: '24px',
+                                            borderRadius: '16px',
+                                            background: verificationStatus.valid ? '#f0fdf4' : '#fef2f2',
+                                            border: `1px solid ${verificationStatus.valid ? '#bbf7d0' : '#fecaca'}`,
+                                            width: '100%'
+                                        }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                                                {verificationStatus.valid ? (
+                                                    <CheckCircle2 size={48} style={{ color: '#16a34a' }} />
+                                                ) : (
+                                                    <XCircle size={48} style={{ color: '#dc2626' }} />
+                                                )}
+                                                <h4 style={{ fontSize: '1.25rem', fontWeight: '700', color: verificationStatus.valid ? '#166534' : '#991b1b' }}>
+                                                    {verificationStatus.message}
+                                                </h4>
+                                                {verificationStatus.valid && (
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        <p style={{ color: '#15803d', fontSize: '0.875rem', fontWeight: '500' }}>Official Official Identity</p>
+                                                        <p style={{ color: '#111827', fontSize: '1.125rem', fontWeight: '600', marginTop: '4px' }}>{verificationStatus.name}</p>
+                                                    </div>
+                                                )}
+                                                <button
+                                                    onClick={() => setVerificationStatus(null)}
+                                                    className="btn-outline"
+                                                    style={{ marginTop: '12px', padding: '8px 24px' }}
+                                                >
+                                                    Scan Again
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : verifying ? (
+                                        <div className="verifying-state" style={{ marginTop: '24px', textAlign: 'center' }}>
+                                            <Loader2 className="animate-spin text-blue-500" size={40} style={{ margin: '0 auto', color: '#3b82f6' }} />
+                                            <p style={{ marginTop: '12px', color: '#64748b' }}>Authenticating identity...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="scanner-container" style={{ marginTop: '24px', width: '100%' }}>
+                                            <CheckerScanner onScanResult={handleCheckerScan} />
+                                        </div>
+                                    )}
+
+                                    <div style={{ marginTop: '24px', padding: '12px', borderRadius: '8px', background: '#f8fafc', fontSize: '0.75rem', color: '#64748b', textAlign: 'left' }}>
+                                        <strong>Privacy Note:</strong> This scanner is only for identifying official SREC bus checkers. No personal camera data is stored or transmitted.
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </>
                 )}

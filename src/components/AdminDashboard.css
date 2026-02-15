@@ -892,7 +892,203 @@ body {
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
     transform: translateX(-100%);
-    animation: shimmer 2s infinite;
+    animation: spin 1s linear infinite;
+}
+
+/* Expiration Badges */
+.badge-expired {
+    background-color: #fee2e2;
+    color: #ef4444;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.badge-soon {
+    background-color: #ffedd5;
+    color: #f97316;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Scan Result Enhancements */
+.scan-result-card .detail-row.highlight {
+    background: #f8fafc;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+}
+
+.scan-result-card .detail-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    display: block;
+}
+
+.scan-result-card .detail-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Notification Styles (Ported & Adapted) */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.notification-wrapper {
+    position: relative;
+}
+
+.notification-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.notification-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.65rem;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 320px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    z-index: 50;
+    overflow: hidden;
+    animation: slideDown 0.2s ease-out;
+}
+
+.notification-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.mark-read-btn {
+    background: none;
+    border: none;
+    font-size: 0.75rem;
+    color: #3b82f6;
+    cursor: pointer;
+}
+
+.notification-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f8fafc;
+    display: flex;
+    gap: 12px;
+    transition: background 0.15s;
+}
+
+.notification-item.unread {
+    background: #f0f9ff;
+}
+
+.notification-item:hover {
+    background: #f8fafc;
+}
+
+.notif-icon {
+    margin-top: 2px;
+}
+
+.notif-icon.warning {
+    color: #f59e0b;
+}
+
+.notif-icon.success {
+    color: #10b981;
+}
+
+.notif-icon.error {
+    color: #ef4444;
+}
+
+.notif-icon.info {
+    color: #3b82f6;
+}
+
+.notif-content p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #334155;
+    line-height: 1.4;
+}
+
+.notif-time {
+    display: block;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+.empty-notif {
+    padding: 24px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+
+.scan-result-card.warning {
+    border-color: #f59e0b;
+    background-color: #fffbeb;
+}
+
+.scan-result-card.warning .result-icon {
+    color: #d97706;
 }
 
 @keyframes shimmer {

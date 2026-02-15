@@ -25,6 +25,7 @@ db.serialize(() => {
     department TEXT,
     year TEXT,
     phone_number TEXT,
+    checker_id TEXT UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
 
@@ -38,6 +39,7 @@ db.serialize(() => {
   db.run(`ALTER TABLE users ADD COLUMN student_type TEXT`, (err) => { });
   db.run(`ALTER TABLE users ADD COLUMN bus_number TEXT`, (err) => { });
   db.run(`ALTER TABLE users ADD COLUMN bus_stop_name TEXT`, (err) => { });
+  db.run(`ALTER TABLE users ADD COLUMN checker_id TEXT`, (err) => { });
 
   // Unique index for SREC Register Number (Roll Number)
   db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_roll_num ON users (roll_number) WHERE roll_number IS NOT NULL`, (err) => {
@@ -52,9 +54,20 @@ db.serialize(() => {
     if (!row) {
       const bcrypt = require('bcrypt');
       const hashedPassword = await bcrypt.hash('admin123', 10);
-      db.run(`INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`,
-        ['System Admin', 'admin@srec.edu', hashedPassword, 'admin']);
+      db.run(`INSERT INTO users (name, email, password, role, checker_id) VALUES (?, ?, ?, ?, ?)`,
+        ['System Admin', 'admin@srec.edu', hashedPassword, 'admin', 'CHK-ADMIN-1']);
       console.log('✅ Default Admin account seeded: admin@srec.edu / admin123');
+    }
+  });
+
+  // Assign checker_id to existing admins who don't have one
+  db.all(`SELECT id FROM users WHERE role = 'admin' AND checker_id IS NULL`, (err, rows) => {
+    if (rows && rows.length > 0) {
+      rows.forEach(row => {
+        const checkerId = `CHK-AD-${row.id}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+        db.run(`UPDATE users SET checker_id = ? WHERE id = ?`, [checkerId, row.id]);
+      });
+      console.log(`✅ Assigned checker_id to ${rows.length} existing admins.`);
     }
   });
 

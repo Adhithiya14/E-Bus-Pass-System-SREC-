@@ -24,10 +24,74 @@ const sendEmailMock = (to, subject, html) => {
     console.log("\n--- [MOCK EMAIL SENT] ---");
     console.log(`TO: ${to}`);
     console.log(`SUBJECT: ${subject}`);
+
     console.log(`BODY: ${html.replace(/<[^>]*>?/gm, '')}`); // Simple strip tags for console
     console.log("-------------------------\n");
 };
 const SECRET_KEY = "srec_secret_key_123";
+
+// --- Scheduled Job: Expiration Notifications ---
+const checkExpiringPasses = () => {
+    console.log('Running Expiration Check Job...');
+    const now = new Date();
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+    // 1. Notify Students (Expiring in <= 7 days, active status)
+    const sql = `
+        SELECT p.id, p.user_id, p.valid_until, u.name, u.email 
+        FROM passes p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.status = 'active'
+        AND datetime(p.valid_until) <= datetime(?)
+        AND datetime(p.valid_until) > datetime(?)
+    `;
+
+    db.all(sql, [sevenDaysFromNow.toISOString(), now.toISOString()], (err, rows) => {
+        if (err || !rows) return;
+
+        rows.forEach(row => {
+            const daysLeft = Math.ceil((new Date(row.valid_until) - now) / (1000 * 60 * 60 * 24));
+            const msg = `Your bus pass expires in ${daysLeft} days. Please renew soon.`;
+
+            // Check if notification already sent in last 24h (to avoid spam)
+            db.get(`SELECT id FROM notifications WHERE user_id = ? AND message = ? AND created_at > datetime('now', '-1 day')`,
+                [row.user_id, msg], (err, existing) => {
+                    if (!existing) {
+                        db.run(`INSERT INTO notifications (user_id, message, type) VALUES (?, ?, 'warning')`, [row.user_id, msg]);
+                        console.log(`[Notification] Sent to student ${row.name}: ${msg}`);
+                    }
+                });
+        });
+
+        // 2. Notify Admins (Aggregated)
+        if (rows.length > 0) {
+            const adminMsg = `${rows.length} student passes are expiring within 7 days. Check 'Analytics' for details.`;
+            // Find all admins
+            db.all(`SELECT id FROM users WHERE role = 'admin'`, [], (err, admins) => {
+                if (err || !admins) return;
+                admins.forEach(admin => {
+                    db.get(`SELECT id FROM notifications WHERE user_id = ? AND message = ? AND created_at > datetime('now', '-1 day')`,
+                        [admin.id, adminMsg], (err, existing) => {
+                            if (!existing) {
+                                db.run(`INSERT INTO notifications (user_id, message, type) VALUES (?, ?, 'info')`, [admin.id, adminMsg]);
+                            }
+                        });
+                });
+            });
+        }
+    });
+
+    // 2.5 Mark strictly expired passes as 'expired'? 
+    // The current system logic relies on status='active' AND valid_until > now. 
+    // Changing status to 'expired' explicitly is good for clean data but might interfere with historical records if not careful.
+    // For now, let's just rely on the date check in logic, but we can notify about ALREADY expired ones too if needed.
+};
+
+// Run job on startup and every 12 hours
+setTimeout(checkExpiringPasses, 5000); // Initial delay
+setInterval(checkExpiringPasses, 12 * 60 * 60 * 1000); // 12 Hours
+
 
 // Update: allow larger payloads for Base64 documents
 app.use(cors({
@@ -62,11 +126,12 @@ app.post('/api/register', async (req, res) => {
         // However, the prompt asked to SEPARATE. So I will focus on 'credentials' having the auth truth.
         // We will insert 'email' into users as well for easier fetching of profile, OR we can leave it null/empty there if we want strict separation.
         // Let's keep email in users for profile display convenience, but rely on credentials for auth.
-        const sqlUser = `INSERT INTO users (name, email, role, roll_number, department, year, phone_number, gender, student_type, bus_number, bus_stop_name, profile_pic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const sqlUser = `INSERT INTO users (name, email, password, role, roll_number, department, year, phone_number, gender, student_type, bus_number, bus_stop_name, profile_pic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const paramsUser = [
             name,
             normalizedEmail, // Keeping copy in users for profile view
+            hashedPassword, // Satisfy NOT NULL constraint
             role || 'student',
             roll_number,
             department,
@@ -170,7 +235,8 @@ app.post('/api/login', (req, res) => {
                 roll_number: user.roll_number,
                 department: user.department,
                 year: user.year,
-                phone_number: user.phone_number
+                phone_number: user.phone_number,
+                checker_id: user.checker_id
             }
         });
     });
@@ -555,6 +621,17 @@ app.get('/api/notifications/:userId', (req, res) => {
     });
 });
 
+// Verify Checker Authenticity
+app.get('/api/checker/verify/:checkerId', (req, res) => {
+    const { checkerId } = req.params;
+    const sql = `SELECT name, role FROM users WHERE checker_id = ? AND role = 'admin'`;
+    db.get(sql, [checkerId], (err, checker) => {
+        if (err) return res.status(500).json({ error: "Database error" });
+        if (!checker) return res.status(404).json({ valid: false, message: "Unauthorized Checker" });
+        res.json({ valid: true, message: "Authorized Checker", name: checker.name });
+    });
+});
+
 // Mark Notifications as Read
 app.post('/api/notifications/read', (req, res) => {
     const { userId } = req.body;
@@ -590,9 +667,11 @@ app.get('/api/routes', (req, res) => {
 app.get('/api/pass/verify/:qrString', (req, res) => {
     const { qrString } = req.params;
     const sql = `
-        SELECT p.*, u.name, u.roll_number, u.department, u.year 
+        SELECT p.*, u.name, u.roll_number, u.department, u.year, 
+               r.bus_number as bus_route_bus_number, r.stops 
         FROM passes p
         JOIN users u ON p.user_id = u.id
+        LEFT JOIN bus_routes r ON p.route_number = r.route_number
         WHERE p.qr_code = ?
     `;
     db.get(sql, [qrString], (err, row) => {
@@ -608,9 +687,11 @@ app.post('/api/pass/verify-live', (req, res) => {
 
     // 1. Find Pass
     const sql = `
-        SELECT p.*, u.name, u.roll_number, u.department, u.year 
+        SELECT p.*, u.name, u.roll_number, u.department, u.year,
+               r.bus_number as bus_route_bus_number
         FROM passes p 
         JOIN users u ON p.user_id = u.id 
+        LEFT JOIN bus_routes r ON p.route_number = r.route_number
         WHERE p.qr_code = ?
     `;
 
@@ -740,14 +821,15 @@ app.post('/api/pass/verify-manual', (req, res) => {
 
         // Find their latest active pass
         const passSql = `
-            SELECT p.*, r.route_name 
+            SELECT p.*, u.name, u.roll_number, u.department, u.year, r.route_name, r.bus_number as bus_route_bus_number 
             FROM passes p 
+            JOIN users u ON p.user_id = u.id
             LEFT JOIN bus_routes r ON p.route_number = r.route_number
-            WHERE p.user_id = ? AND p.status = 'active'
+            WHERE (lower(u.roll_number) = ? OR lower(u.email) = ?) AND p.status = 'active'
             ORDER BY p.id DESC LIMIT 1
         `;
 
-        db.get(passSql, [user.id], (err, pass) => {
+        db.get(passSql, [search, search], (err, pass) => {
             if (err) return res.status(500).json({ error: "Database error" });
 
             if (!pass) {
@@ -816,7 +898,7 @@ app.get('/api/admin/stats', (req, res) => {
 // Add New Route
 app.post('/api/admin/routes', (req, res) => {
     const { route_number, route_name, stops, timings, bus_number } = req.body;
-    const sql = `INSERT INTO bus_routes (route_number, route_name, stops, timings, bus_number) VALUES (?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO bus_routes(route_number, route_name, stops, timings, bus_number) VALUES(?, ?, ?, ?, ?)`;
     db.run(sql, [route_number, route_name, stops, timings, bus_number], function (err) {
         if (err) return res.status(500).json({ error: "Failed to add route" });
         res.json({ id: this.lastID });
@@ -827,7 +909,7 @@ app.post('/api/admin/routes', (req, res) => {
 app.put('/api/admin/routes/:id', (req, res) => {
     const { route_number, route_name, stops, timings, bus_number } = req.body;
     const { id } = req.params;
-    const sql = `UPDATE bus_routes SET route_number = ?, route_name = ?, stops = ?, timings = ?, bus_number = ? WHERE id = ?`;
+    const sql = `UPDATE bus_routes SET route_number = ?, route_name = ?, stops = ?, timings = ?, bus_number = ? WHERE id = ? `;
     db.run(sql, [route_number, route_name, stops, timings, bus_number, id], function (err) {
         if (err) return res.status(500).json({ error: "Failed to update route" });
         res.json({ success: true });
@@ -836,7 +918,7 @@ app.put('/api/admin/routes/:id', (req, res) => {
 
 // Delete Route
 app.delete('/api/admin/routes/:id', (req, res) => {
-    db.run(`DELETE FROM bus_routes WHERE id = ?`, [req.params.id], (err) => {
+    db.run(`DELETE FROM bus_routes WHERE id = ? `, [req.params.id], (err) => {
         if (err) return res.status(500).json({ error: "Failed to delete route" });
         res.json({ success: true });
     });
@@ -846,12 +928,12 @@ app.delete('/api/admin/routes/:id', (req, res) => {
 app.get('/api/pass/:userId', (req, res) => {
     const { userId } = req.params;
     const sql = `
-        SELECT p.*, r.route_name, u.name as user_name, u.roll_number 
+        SELECT p.*, r.route_name, r.bus_number, u.name as user_name, u.roll_number 
         FROM passes p 
         LEFT JOIN bus_routes r ON p.route_number = r.route_number 
         JOIN users u ON p.user_id = u.id 
-        WHERE p.user_id = ? 
-        ORDER BY p.id DESC LIMIT 1`;
+        WHERE p.user_id = ?
+            ORDER BY p.id DESC LIMIT 1`;
 
     db.get(sql, [userId], (err, row) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -872,7 +954,7 @@ app.post('/api/auth/otp/request', (req, res) => {
     const validUntil = new Date();
     validUntil.setMinutes(validUntil.getMinutes() + 5);
 
-    const sql = `INSERT INTO otps (user_id, otp_code, valid_until, status) VALUES (?, ?, ?, 'pending')`;
+    const sql = `INSERT INTO otps(user_id, otp_code, valid_until, status) VALUES(?, ?, ?, 'pending')`;
 
     db.run(sql, [userId, otp, validUntil.toISOString()], function (err) {
         if (err) {
@@ -903,10 +985,10 @@ app.post('/api/pass/ticket/purchase', (req, res) => {
         if (err) return res.status(500).json({ error: "QR Generation Failed" });
 
         const sql = `
-            INSERT INTO passes (
-                user_id, status, payment_status, amount, 
+            INSERT INTO passes(
+                user_id, status, payment_status, amount,
                 qr_code, pass_type, usage_limit, usage_count, valid_until, paid_at
-            ) VALUES (?, 'active', 'paid', ?, ?, 'ticket', 1, 0, ?, CURRENT_TIMESTAMP)
+            ) VALUES(?, 'active', 'paid', ?, ?, 'ticket', 1, 0, ?, CURRENT_TIMESTAMP)
         `;
 
         db.run(sql, [userId, amount, url, validUntil.toISOString()], function (err) {
@@ -920,19 +1002,57 @@ app.post('/api/pass/ticket/purchase', (req, res) => {
 app.get('/api/admin/students', (req, res) => {
     const sql = `
         SELECT u.id, u.name, u.email, u.roll_number, u.department, u.year, u.phone_number,
-               p.status as pass_status, p.valid_until
+            p.status as pass_status, p.valid_until, p.payment_status, p.boarding_point, r.bus_number
         FROM users u
         LEFT JOIN (
-            SELECT user_id, status, valid_until, MAX(id) as max_id
+            SELECT user_id, MAX(id) as max_id
             FROM passes
             GROUP BY user_id
         ) latest_p ON u.id = latest_p.user_id
         LEFT JOIN passes p ON latest_p.max_id = p.id
+        LEFT JOIN bus_routes r ON p.route_number = r.route_number
         WHERE u.role = 'student'
         ORDER BY u.created_at DESC
     `;
     db.all(sql, [], (err, rows) => {
         if (err) return res.status(500).json({ error: "Database error" });
+        res.json(rows);
+    });
+});
+
+// NEW: Report - Fee Defaulters
+app.get('/api/admin/reports/defaulters', (req, res) => {
+    // Logic: Students who have a pass record but payment_status is NOT 'paid'
+    // Or strictly those with 'pending'/'failed'.
+    const sql = `
+        SELECT u.roll_number, u.name, r.bus_number, p.boarding_point, p.payment_status
+        FROM users u
+        JOIN passes p ON u.id = p.user_id
+        LEFT JOIN bus_routes r ON p.route_number = r.route_number
+        WHERE u.role = 'student'
+        AND(p.payment_status != 'paid' OR p.payment_status IS NULL)
+        AND p.status != 'expired' -- focus on active / pending attempts
+        ORDER BY u.roll_number ASC
+            `;
+    db.all(sql, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: "Database error fetching defaulters" });
+        res.json(rows);
+    });
+});
+
+// NEW: Report - Expired Students
+app.get('/api/admin/reports/expired', (req, res) => {
+    const sql = `
+        SELECT u.roll_number, u.name, r.bus_number, p.boarding_point, p.valid_until
+        FROM users u
+        JOIN passes p ON u.id = p.user_id
+        LEFT JOIN bus_routes r ON p.route_number = r.route_number
+        WHERE u.role = 'student'
+        AND(p.status = 'expired' OR p.valid_until < date('now'))
+        ORDER BY u.roll_number ASC
+            `;
+    db.all(sql, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: "Database error fetching expired students" });
         res.json(rows);
     });
 });
@@ -945,7 +1065,7 @@ app.get('/api/user/recommendation/:userId', (req, res) => {
         SELECT COUNT(*) as count FROM scans s
         JOIN passes p ON s.pass_id = p.id
         WHERE p.user_id = ? AND s.scanned_at > date('now', '-30 days')
-    `, [userId], (err, row) => {
+            `, [userId], (err, row) => {
         const rides = row ? row.count : 0;
         let suggestion = "standard";
         if (rides < 5) suggestion = "ticket";
@@ -973,7 +1093,7 @@ app.post('/api/route-change/request', (req, res) => {
                 return res.status(400).json({ error: "You already have a pending request for this date." });
             }
 
-            const sql = `INSERT INTO route_change_requests (user_id, original_route, new_route, travel_date, reason) VALUES (?, ?, ?, ?, ?)`;
+            const sql = `INSERT INTO route_change_requests(user_id, original_route, new_route, travel_date, reason) VALUES(?, ?, ?, ?, ?)`;
             db.run(sql, [userId, originalRoute, newRoute, travelDate, reason], function (err) {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ success: true, message: "Request submitted successfully" });
@@ -998,7 +1118,7 @@ app.get('/api/admin/route-change-requests', (req, res) => {
 // 3. Update Request Status (Admin)
 app.post('/api/admin/route-change/status', (req, res) => {
     const { requestId, status } = req.body;
-    db.run(`UPDATE route_change_requests SET status = ? WHERE id = ?`, [status, requestId], function (err) {
+    db.run(`UPDATE route_change_requests SET status = ? WHERE id = ? `, [status, requestId], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });

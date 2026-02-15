@@ -1088,7 +1088,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
 
                             <div className="qr-display-area" style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px dashed #cbd5e1', marginBottom: '20px' }}>
                                 <img
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/verify-checker/${user.checker_id}`)}`}
+                                    src={`https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(`${window.location.origin}/verify-checker/${user.checker_id}`)}`}
                                     alt="Checker Verification QR"
                                     style={{ width: '100%', maxWidth: '200px', margin: '0 auto', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                 />

@@ -850,7 +850,10 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                                 onClose={() => setPaymentModalData(null)}
                                 paymentDetails={paymentModalData}
                                 onPaymentSuccess={async () => {
-                                    return success;
+                                    if (paymentModalData && typeof paymentModalData.apiCall === 'function') {
+                                        return await paymentModalData.apiCall();
+                                    }
+                                    return true;
                                 }}
                             />
                         )}

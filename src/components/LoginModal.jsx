@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Mail, Lock, Shield, Hash, GraduationCap, Building2, Phone, ChevronLeft } from 'lucide-react';
 import './LoginModal.css';
+import { safeFetch } from '../utils/api';
 
 const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'login' }) => {
     const [isRegister, setIsRegister] = useState(initialMode === 'register');
@@ -70,30 +71,26 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
 
         try {
             if (forgotStep === 1) {
-                const res = await fetch('/api/forgot-password', {
+                const data = await safeFetch('/api/forgot-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ roll_number: resetData.roll_number })
                 });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error);
                 setSuccess(data.message);
                 setForgotStep(2);
             } else if (forgotStep === 2) {
-                const res = await fetch('/api/verify-otp', {
+                const data = await safeFetch('/api/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ roll_number: resetData.roll_number, otp: resetData.otp })
                 });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error);
                 setForgotStep(3);
                 setSuccess('');
             } else if (forgotStep === 3) {
                 if (resetData.newPassword !== resetData.confirmPassword) {
                     throw new Error("Passwords do not match");
                 }
-                const res = await fetch('/api/reset-password', {
+                const data = await safeFetch('/api/reset-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -102,8 +99,6 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                         newPassword: resetData.newPassword
                     })
                 });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error);
                 setSuccess(data.message);
                 setTimeout(() => {
                     setIsForgotPassword(false);
@@ -125,17 +120,11 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
         const endpoint = isRegister ? '/api/register' : '/api/login';
 
         try {
-            const response = await fetch(endpoint, {
+            const data = await safeFetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Something went wrong');
-            }
 
             if (isRegister) {
                 // Keep the modal open in register mode

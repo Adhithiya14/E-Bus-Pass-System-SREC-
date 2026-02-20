@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import {
     Scan,
@@ -16,6 +16,8 @@ import {
     Search,
     RotateCw,
     BarChart3,
+    TrendingUp,
+    AlertTriangle,
     Clock,
     Bell,
     AlertCircle,
@@ -25,7 +27,8 @@ import {
     ChevronDown,
     Menu,
     X,
-    ShieldCheck
+    ShieldCheck,
+    Eye
 } from 'lucide-react';
 import './AdminDashboard.css';
 import ProfileSettings from './ProfileSettings';
@@ -331,15 +334,30 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
             doc.setTextColor(100);
             doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
 
-            // Functional usage of autoTable
-            doc.autoTable({
+            // Functional usage of autoTable for better compatibility
+            autoTable(doc, {
                 head: [headers],
                 body: data,
                 startY: 40,
-                theme: 'grid',
-                headStyles: { fillColor: [63, 81, 181] },
-                styles: { fontSize: 10, cellPadding: 3 },
-                alternateRowStyles: { fillColor: [245, 245, 245] }
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [63, 81, 181],
+                    textColor: [255, 255, 255],
+                    fontSize: 11,
+                    fontStyle: 'bold'
+                },
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 4,
+                    halign: 'left'
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 247, 250]
+                },
+                columnStyles: {
+                    0: { cellWidth: 35 }, // Register Number
+                    2: { halign: 'center' } // Bus Number
+                }
             });
 
             doc.save(filename);
@@ -692,10 +710,9 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                                     {app.status === 'pending' ? (
                                                         <div className="action-btns">
                                                             <button
-                                                                className={`approve-btn ${app.payment_status !== 'paid' ? 'disabled' : ''}`}
-                                                                onClick={() => app.payment_status === 'paid' && handleUpdateStatus(app.id, 'active')}
-                                                                title={app.payment_status === 'paid' ? "Approve" : "Cannot Approve: Payment Pending"}
-                                                                disabled={app.payment_status !== 'paid'}
+                                                                className="approve-btn"
+                                                                onClick={() => handleUpdateStatus(app.id, 'active')}
+                                                                title="Approve (Students can also pay after approval)"
                                                             >
                                                                 <Check size={16} />
                                                             </button>
@@ -1034,18 +1051,35 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                 rejectionModal.isOpen && (
                     <div className="modal-overlay rejection-modal-overlay">
                         <div className="modal-content rejection-modal">
-                            <h3>Rejection Reason</h3>
-                            <p>Provide a reason why this application is being rejected.</p>
-                            <textarea
-                                placeholder="e.g. ID proof is blurry, incorrect details..."
-                                value={rejectionModal.reason}
-                                onChange={(e) => setRejectionModal({ ...rejectionModal, reason: e.target.value })}
-                                autoFocus
-                            />
-                            <div className="modal-actions">
-                                <button className="btn-cancel-reject" onClick={() => setRejectionModal({ isOpen: false, passId: null, reason: '' })}>Cancel</button>
+                            <div className="rejection-modal-header">
+                                <div className="rejection-icon-wrapper">
+                                    <AlertCircle size={32} />
+                                </div>
+                                <h3>Rejection Reason</h3>
+                                <p>Please state why this application is being declined.</p>
+                            </div>
+
+                            <div className="rejection-modal-body">
+                                <label className="rejection-label">Detailed Reason</label>
+                                <textarea
+                                    placeholder="e.g. ID proof is blurry, incorrect student details, or duplicate application..."
+                                    value={rejectionModal.reason}
+                                    onChange={(e) => setRejectionModal({ ...rejectionModal, reason: e.target.value })}
+                                    autoFocus
+                                    className="rejection-textarea"
+                                />
+                                <div className="rejection-tips">
+                                    <div className="tip-item">• Be specific to help the student correct it.</div>
+                                    <div className="tip-item">• Use professional and clear language.</div>
+                                </div>
+                            </div>
+
+                            <div className="rejection-modal-footer">
+                                <button className="btn-cancel-rejection" onClick={() => setRejectionModal({ isOpen: false, passId: null, reason: '' })}>
+                                    Go Back
+                                </button>
                                 <button
-                                    className="btn-confirm-reject"
+                                    className="btn-confirm-rejection"
                                     onClick={() => handleUpdateStatus(rejectionModal.passId, 'rejected', rejectionModal.reason)}
                                     disabled={!rejectionModal.reason.trim()}
                                 >

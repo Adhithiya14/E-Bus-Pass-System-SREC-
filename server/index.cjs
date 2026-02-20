@@ -597,14 +597,9 @@ app.post('/api/admin/update-status', (req, res) => {
 
     // Main Logic
     if (status === 'active') {
-        // Enforce Payment Check
-        db.get('SELECT payment_status FROM passes WHERE id = ?', [passId], (err, row) => {
-            if (err) return res.status(500).json({ error: "Database error" });
-            if (!row) return res.status(404).json({ error: "Pass not found" });
-
-            if (row.payment_status !== 'paid') {
-                return res.status(400).json({ error: "Cannot approve unpaid pass. Student must complete payment first." });
-            }
+        // Automatically mark as paid if admin is manually approving
+        db.run(`UPDATE passes SET payment_status = 'paid', paid_at = CURRENT_TIMESTAMP WHERE id = ?`, [passId], (err) => {
+            if (err) console.error("Auto-payment update failed:", err);
             performUpdate();
         });
     } else {

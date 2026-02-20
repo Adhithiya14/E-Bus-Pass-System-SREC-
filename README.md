@@ -22,7 +22,7 @@ It digitizes bus pass issuance, verification, and route management using QR code
 
 - Frontend: React + Vite
 - Backend: Node.js with Express
-- Database: MySQL
+- Database: SQLite (local)
 - QR Code based validation
 - HTML, CSS, JavaScript
 

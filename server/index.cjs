@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./database.cjs');
+const routeStopsData = require('./route_stops.cjs');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const QRCode = require('qrcode');
@@ -674,6 +675,20 @@ app.get('/api/routes', (req, res) => {
     });
 });
 
+// Get stops for a specific bus route (for Map Visualization)
+app.get('/api/route-stops/:busNumber', (req, res) => {
+    const { busNumber } = req.params;
+    const stops = routeStopsData[busNumber] || routeStopsData[parseInt(busNumber)];
+
+    if (!stops) {
+        return res.status(404).json({ error: "No stop data found for this bus" });
+    }
+
+    // Ensure stops are sorted by order
+    const sortedStops = [...stops].sort((a, b) => a.order - b.order);
+    res.json(sortedStops);
+});
+
 // Verify Pass by QR String (Advanced Verification)
 app.get('/api/pass/verify/:qrString', (req, res) => {
     const { qrString } = req.params;
@@ -1036,7 +1051,7 @@ app.get('/api/admin/reports/defaulters', (req, res) => {
     // Logic: Students who have a pass record but payment_status is NOT 'paid'
     // Or strictly those with 'pending'/'failed'.
     const sql = `
-        SELECT u.roll_number, u.name, r.bus_number, p.boarding_point, p.payment_status
+        SELECT u.roll_number, u.name, p.route_number, r.bus_number, p.boarding_point, p.payment_status
         FROM users u
         JOIN passes p ON u.id = p.user_id
         LEFT JOIN bus_routes r ON p.route_number = r.route_number
@@ -1054,7 +1069,7 @@ app.get('/api/admin/reports/defaulters', (req, res) => {
 // NEW: Report - Expired Students
 app.get('/api/admin/reports/expired', (req, res) => {
     const sql = `
-        SELECT u.roll_number, u.name, r.bus_number, p.boarding_point, p.valid_until
+        SELECT u.roll_number, u.name, p.route_number, r.bus_number, p.boarding_point, p.valid_until
         FROM users u
         JOIN passes p ON u.id = p.user_id
         LEFT JOIN bus_routes r ON p.route_number = r.route_number

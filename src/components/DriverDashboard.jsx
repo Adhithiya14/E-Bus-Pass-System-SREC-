@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
     Bus, Users, MapPin, Clock, Bell, LogOut,
     Play, Square, ChevronRight, AlertTriangle,
-    Info, CheckCircle, Settings, Save, RefreshCw
+    Info, CheckCircle, Settings, Save, RefreshCw,
+    Map as MapIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { safeFetch } from '../utils/api';
 import './DriverDashboard.css';
+import BusRouteMap from './BusRouteMap';
 
 const DriverDashboard = ({ user, onLogout }) => {
     const [activeTab, setActiveTab] = useState('bus-details');
@@ -16,6 +18,7 @@ const DriverDashboard = ({ user, onLogout }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [updating, setUpdating] = useState(false);
+    const [showMap, setShowMap] = useState(false);
 
     // Timings state
     const [timings, setTimings] = useState({
@@ -198,6 +201,24 @@ const DriverDashboard = ({ user, onLogout }) => {
                                     >
                                         {updating ? 'Saving...' : <><Save size={20} /> Save My Timings</>}
                                     </button>
+                                </div>
+
+                                <div className="glass-panel map-section-driver" style={{ marginTop: '20px' }}>
+                                    <div className="card-header">
+                                        <MapIcon size={28} color="var(--driver-primary)" />
+                                        <h2>Route Map Visualization</h2>
+                                        <button
+                                            className={`toggle-map-btn-driver ${showMap ? 'active' : ''}`}
+                                            onClick={() => setShowMap(!showMap)}
+                                        >
+                                            {showMap ? 'Hide Map' : 'View Route Map'}
+                                        </button>
+                                    </div>
+                                    {showMap && (
+                                        <div className="driver-map-wrapper">
+                                            <BusRouteMap routeNumber={busData?.route_number} />
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                         )}

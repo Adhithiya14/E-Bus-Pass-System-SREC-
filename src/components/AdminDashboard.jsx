@@ -69,7 +69,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState(null);
-    const [newRoute, setNewRoute] = useState({ route_number: '', route_name: '', stops: '', bus_number: '' });
+    const [newRoute, setNewRoute] = useState({ route_number: '', route_name: '', stops: '', timings: '', bus_number: '' });
     const [editingRoute, setEditingRoute] = useState(null);
     const [rejectionModal, setRejectionModal] = useState({ isOpen: false, passId: null, reason: '' });
 
@@ -275,7 +275,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                 body: JSON.stringify(newRoute)
             });
 
-            setNewRoute({ route_number: '', route_name: '', stops: '', bus_number: '' });
+            setNewRoute({ route_number: '', route_name: '', stops: '', timings: '', bus_number: '' });
             setEditingRoute(null);
             fetchRoutes();
         } catch (err) {
@@ -289,6 +289,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
             route_number: route.route_number,
             route_name: route.route_name,
             stops: route.stops,
+            timings: route.timings || '',
             bus_number: route.bus_number || ''
         });
     };
@@ -376,10 +377,11 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                 return;
             }
 
-            const headers = ["Register Number", "Name", "Bus Number", "Stopping Name", "Payment Status"];
+            const headers = ["Register Number", "Name", "Route ID", "Bus Plate", "Stopping Name", "Payment Status"];
             const rows = defaulters.map(s => [
                 s.roll_number || 'N/A',
                 s.name || 'N/A',
+                s.route_number || 'N/A',
                 s.bus_number || 'N/A',
                 s.boarding_point || 'N/A',
                 (s.payment_status || 'Unknown').toUpperCase()
@@ -406,10 +408,11 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                 return;
             }
 
-            const headers = ["Register Number", "Name", "Bus Number", "Stopping Name", "Valid Until"];
+            const headers = ["Register Number", "Name", "Route ID", "Bus Plate", "Stopping Name", "Valid Until"];
             const rows = expired.map(s => [
                 s.roll_number || 'N/A',
                 s.name || 'N/A',
+                s.route_number || 'N/A',
                 s.bus_number || 'N/A',
                 s.boarding_point || 'N/A',
                 s.valid_until ? new Date(s.valid_until).toLocaleDateString() : 'N/A'
@@ -589,16 +592,22 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                         <div className="res-roll">{scanResult.data.roll_number}</div>
 
                                         {/* Added Bus and Stop Details */}
-                                        {(scanResult.data.bus_route_bus_number || scanResult.data.boarding_point) && (
+                                        {(scanResult.data.route_number || scanResult.data.bus_route_bus_number || scanResult.data.boarding_point) && (
                                             <div className="student-sub-info" style={{ flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                                                {scanResult.data.route_number && (
+                                                    <div className="detail-row highlight" style={{ background: 'rgba(31, 122, 90, 0.1)', border: '1px solid rgba(31, 122, 90, 0.2)' }}>
+                                                        <span className="detail-label" style={{ color: '#1F7A5A' }}>Bus Route</span>
+                                                        <span className="detail-value" style={{ color: '#1F7A5A', fontWeight: '800' }}>#{scanResult.data.route_number}</span>
+                                                    </div>
+                                                )}
                                                 {scanResult.data.bus_route_bus_number && (
-                                                    <div className="detail-row highlight">
-                                                        <span className="detail-label">Bus Number</span>
+                                                    <div className="detail-row">
+                                                        <span className="detail-label">Bus Plate</span>
                                                         <span className="detail-value">{scanResult.data.bus_route_bus_number}</span>
                                                     </div>
                                                 )}
                                                 {scanResult.data.boarding_point && (
-                                                    <div className="detail-row highlight">
+                                                    <div className="detail-row">
                                                         <span className="detail-label">Stopping Name</span>
                                                         <span className="detail-value">{scanResult.data.boarding_point}</span>
                                                     </div>
@@ -742,7 +751,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                 <h4>{editingRoute ? 'Edit Route' : 'Add New Route'}</h4>
                                 <form onSubmit={handleAddRoute}>
                                     <div className="form-group-admin">
-                                        <label>Service ID (Internal)</label>
+                                        <label>Route ID (Display Number)</label>
                                         <input type="text" value={newRoute.route_number} onChange={e => setNewRoute({ ...newRoute, route_number: e.target.value })} placeholder="e.g. 101" required />
                                     </div>
                                     <div className="form-group-admin">
@@ -751,7 +760,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                     </div>
                                     <div className="form-row-admin">
                                         <div className="form-group-admin">
-                                            <label>Bus Number</label>
+                                            <label>Bus Plate Number</label>
                                             <input type="text" value={newRoute.bus_number} onChange={e => setNewRoute({ ...newRoute, bus_number: e.target.value })} placeholder="TN-37-B-1234" />
                                         </div>
                                     </div>
@@ -759,11 +768,15 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                         <label>Stops (Comma separated)</label>
                                         <textarea value={newRoute.stops} onChange={e => setNewRoute({ ...newRoute, stops: e.target.value })} placeholder="Main Gate, Library, Hostels" required />
                                     </div>
+                                    <div className="form-group-admin">
+                                        <label>Timings (Schedule)</label>
+                                        <input type="text" value={newRoute.timings} onChange={e => setNewRoute({ ...newRoute, timings: e.target.value })} placeholder="e.g. 07:30 AM - 05:00 PM" />
+                                    </div>
                                     <div className="form-actions-admin">
                                         <button type="submit" className="btn-add-route">{editingRoute ? 'Update Route' : 'Add Route'}</button>
                                         {editingRoute && <button type="button" className="btn-cancel-edit" onClick={() => {
                                             setEditingRoute(null);
-                                            setNewRoute({ route_number: '', route_name: '', stops: '', bus_number: '' });
+                                            setNewRoute({ route_number: '', route_name: '', stops: '', timings: '', bus_number: '' });
                                         }}>Cancel</button>}
                                     </div>
                                 </form>
@@ -775,12 +788,23 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                         <div key={r.id} className="route-v-item">
                                             <div className="r-main">
                                                 <div className="r-head">
+                                                    <span className="r-id" style={{ fontWeight: '800', color: '#1F7A5A', marginRight: '8px' }}>#{r.route_number}</span>
                                                     <span className="r-name">{r.route_name}</span>
                                                 </div>
                                                 <div className="r-details">
-                                                    <div className="r-detail-item"><Bus size={12} /> {r.bus_number || 'No Bus Assigned'}</div>
+                                                    <div className="r-detail-item"><Bus size={12} /> Plate: {r.bus_number || 'No Bus Assigned'}</div>
                                                 </div>
-                                                <div className="r-stops">{r.stops}</div>
+                                                <div className="r-stops" style={{ marginTop: '8px' }}>
+                                                    {r.stops?.split(',').map((stop, i) => {
+                                                        const timing = r.timings?.split(',')[i];
+                                                        return (
+                                                            <div key={i} className="admin-stop-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '2px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                                                <span style={{ color: '#475569' }}>{stop.trim()}</span>
+                                                                {timing && <span style={{ color: '#1F7A5A', fontWeight: '700' }}>{timing.trim()}</span>}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                             <div className="r-actions">
                                                 <button onClick={() => handleEditRoute(r)} title="Edit"><Settings size={14} /></button>

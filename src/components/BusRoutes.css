@@ -138,8 +138,17 @@
 }
 
 .stop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
     font-size: 14px;
     line-height: 1.4;
+}
+
+.stop-item:last-child {
+    border-bottom: none;
 }
 
 .stop-name {
@@ -149,8 +158,12 @@
 
 .stop-time {
     color: #1F7A5A;
-    font-weight: 600;
-    margin-left: 4px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    background: #f0fdf4;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
 }
 
 .bus-info {
@@ -174,4 +187,49 @@
     color: #64748b;
     font-weight: 500;
     letter-spacing: 0.5px;
+}
+
+.view-map-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.view-map-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.view-map-btn.active {
+    background: #1F7A5A;
+    color: white;
+    border-color: #1F7A5A;
+    box-shadow: 0 4px 12px rgba(31, 122, 90, 0.2);
+}
+
+.map-row-cell {
+    padding: 0 !important;
+    background: #f8fafc !important;
+    min-height: 400px;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .routes-table-wrapper {
+        border-radius: 0;
+    }
+
+    .view-map-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
 }

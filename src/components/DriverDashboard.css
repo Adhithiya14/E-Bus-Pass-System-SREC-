@@ -359,6 +359,33 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+.toggle-map-btn-driver {
+    background: var(--driver-primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-map-btn-driver:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.toggle-map-btn-driver.active {
+    background: #ef4444;
+}
+
+.driver-map-wrapper {
+    margin-top: 15px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
 .notif-title {
     font-weight: 700;
     margin-bottom: 0.4rem;

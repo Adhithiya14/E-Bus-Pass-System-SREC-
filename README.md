@@ -1,220 +1,153 @@
-QRide – Smart Campus Bus Pass Management System
+# 🚌 QRide – Smart Campus Bus Pass Management System
 
-QRide is a web-based smart campus bus pass management system developed for Sri Ramakrishna Engineering College (SREC).
-It digitizes the complete bus pass lifecycle — issuance, renewal, verification, and route management — using QR code–based validation, making the system secure, efficient, and fully paperless.
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Adhithiya14/E-Bus-Pass-System-SREC-)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tech](https://img.shields.io/badge/Built%20With-React%20%2B%20Node-green)](https://reactjs.org/)
 
-Project Objective
+**QRide** is a comprehensive, web-based digital solution designed for **Sri Ramakrishna Engineering College (SREC)** to streamline and secure campus transportation. It replaces traditional paper-based bus passes with a sophisticated QR-code validation system, offering real-time verification, automated route management, and seamless fee tracking.
 
-The goal of QRide is to eliminate manual bus pass handling and introduce a secure, transparent, and automated system that benefits students, bus checkers, and administrators by:
+---
 
-Reducing paperwork
+## 🚀 Vision & Objectives
 
-Preventing pass misuse
+QRide aims to transform the campus commute experience by introducing transparency, efficiency, and security into the bus pass lifecycle.
 
-Enabling real-time verification
+*   **Zero Paperwork**: Move away from manual pass issuance and physical logbooks.
+*   **Security First**: Prevent pass misuse through unique, encrypted QR tokens.
+*   **Real-Time Efficiency**: Enable instant on-bus verification for checkers.
+*   **Data-Driven**: Provide administrators with precise reporting on fee collection and route occupancy.
 
-Simplifying fee and route management
+---
 
+## ✨ Key Features
 
-Key Features
+### 🎓 Student Module
+*   **Digital Identity**: Profile registration with photo integration.
+*   **Smart Pass**: Access a unique digital pass with dynamic QR codes.
+*   **Flexible Travel**: Support for Regular Passes, Pay-per-ride Tickets, and Hosteller Lite passes.
+*   **Emergency Pass**: Quick generation of one-day travel permits.
+*   **Real-time Maps**: View interactive bus routes and stop timings.
+*   **Notifications**: Get alerted when your pass is nearing expiry.
 
-Student Module
+### 🛡️ Admin Module
+*   **Approval Workflow**: Review and approve/reject applications with automated email alerts.
+*   **Route Management**: Add, update, or remove bus routes and stop coordinates.
+*   **Fleet Oversight**: Manage buses and assign drivers to specific routes.
+*   **Analytics & Reports**: Generate professional PDF reports for fee defaulters and expired passes.
+*   **Security Center**: Monitor system access and manage student data.
 
-Student registration with profile photo
+### 🚍 Driver & Checker Module
+*   **Instant Scanning**: Mobile-responsive scanner to verify student passes in seconds.
+*   **Route Tracking**: View assigned stop sequences and scheduled timings.
+*   **Security Alerts**: Immediate feedback on expired, invalid, or wrong-route passes.
 
-Digital bus pass with unique Pass ID
+---
 
-QR code–based bus pass
+## 🛠️ Technology Stack
 
-Regular bus pass fee payment
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 19, Vite, Lucide React (Icons), Framer Motion (Animations), AOS (Scroll Effects) |
+| **Mapping** | Leaflet.js, React-Leaflet |
+| **Backend** | Node.js, Express.js, JWT (Auth), Bcrypt (Security) |
+| **Database** | SQLite (Self-contained, lightweight) |
+| **Utilities** | HTML2Canvas (PDFs), QRCode (Generation), HTML5-QRCode (Scanning) |
 
-Pay-per-ride tickets for occasional travel
+---
 
-Hosteller Lite Pass support
+## 📐 System Architecture
 
-Emergency pass generation
+```mermaid
+graph TD
+    A[Student Interface] -->|JWT Auth| B(Express API Server)
+    C[Admin Dashboard] -->|JWT Auth| B
+    D[Driver Scanner] -->|JWT Auth| B
+    B --> E[(SQLite Database)]
+    B --> F[QR Generation Engine]
+    B --> G[Email Notification Mock]
+    H[Leaflet Maps] <--> B
+```
 
-Route flexibility & alternate bus travel
+---
 
-View pass status (Active / Expired / Pending)
+## 📦 Getting Started
 
-QR scanner to verify pass validity
+### Prerequisites
 
-Admin Module
+*   **Node.js**: v16.x or higher
+*   **npm**: v8.x or higher
 
-Admin dashboard for verification & approval
+### Installation
 
-Approve / reject bus pass applications
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/Adhithiya14/E-Bus-Pass-System-SREC-.git
+    cd E-Bus-Pass-System-SREC-
+    ```
 
-Manage students, routes, and buses
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
 
-View fee defaulters
+### Running the Application
 
-Identify expired passes
+QRide requires both the backend server and the frontend development server to be running simultaneously.
 
-Download reports (PDF) for:
+1.  **Start the Backend (Terminal 1)**
+    ```bash
+    npm run server
+    ```
+    *The server will start on `http://localhost:5000`*
 
-Fee defaulters
+2.  **Start the Frontend (Terminal 2)**
+    ```bash
+    npm run dev
+    ```
+    *The app will be available at `http://localhost:5173`*
 
-Expired passes
+---
 
-Generate QR codes for validation
+## 📂 Project Structure
 
-Notification alerts for upcoming pass expiry
-
-Checker / Verification Support
-
-QR code validation for pass authenticity
-
-Real-time verification of:
-
-Valid student
-
-Expired pass
-
-Invalid or fake pass
-
-System Highlights
-
-Fully paperless bus pass system
-
-Secure QR code–based validation
-
-Role-based access (Student / Admin)
-
-Real-time pass verification
-
-Scalable and modular architecture
-
-Technologies Used
-
-Frontend
-
-React.js
-
-Vite
-
-HTML5
-
-CSS3
-
-JavaScript
-
-Backend
-
-Node.js
-
-Express.js
-
-Database
-
-SQLite (Local database)
-
-Other Tools
-
-QR Code generation & scanning
-
-Git & GitHub for version control
-
-Project Structure (Overview)
-
+```text
 QRide/
-│
-├── server/                 # Backend (Express + SQLite)
-│   ├── index.cjs
-│   ├── database.cjs
-│   └── qride.db
-│
-├── src/                    # Frontend (React)
-│   ├── components/
-│   ├── App.jsx
-│   └── main.jsx
-│
-├── public/
-├── package.json
-├── vite.config.js
-└── README.md
+├── server/
+│   ├── index.cjs            # Main API Logic & Routes
+│   ├── database.cjs         # DB Schema & Seeding
+│   ├── route_stops.cjs      # Map Coordinate Data
+│   └── qride.db             # Local SQLite Database
+├── src/
+│   ├── components/          # React Dashboards & UI Components
+│   ├── utils/               # API & Helper Functions
+│   ├── App.jsx              # Main Router
+│   └── main.jsx             # App Entry Point
+├── public/                  # Static Assets & Images
+└── README.md                # Project Documentation
+```
 
+---
 
-How to Run the Project
+## 🛤️ Future Roadmap
 
-Prerequisites
+- [ ] **Live GPS Tracking**: Real-time bus location updates on the student map.
+- [ ] **Payment Gateway**: Integration with Razorpay for automated fee collection.
+- [ ] **Mobile App**: Dedicated Android/iOS application for checkers.
+- [ ] **Cloud Migration**: Deploying the SQLite DB to a cloud provider for global access.
 
-Ensure the following are installed on your system:
+---
 
-Node.js (v16 or above)
+## 👨‍💻 Developed For
 
-npm
+**Sri Ramakrishna Engineering College (SREC)**
+*Smart Campus Transportation Management Initiative*
 
-Git (optional)
+---
 
-Step 1: Clone the Repository
+## 📄 License
 
-/// 
-git clone https://github.com/Adhithiya14/E-Bus-Pass-System-SREC-.git
-///
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Step 2: Navigate to Project Folder
+---
 
-///
-cd E-Bus-Pass-System-SREC-
-///
-
-Step 3: Install Dependencies
-
-///b
-npm install
-///
-
-Step 4: Start Backend Server
-
-Open Terminal 1 and run:
-
-///
-npm run server
-///
-Keep this terminal running 
-
-Step 5: Start Frontend Server
-
-Open Terminal 2 and run:
-
-npm run dev
-
-Application URL
-
-http://localhost:5173
-
-Important Notes
-
-Backend must be running before accessing the frontend
-
-node_modules are not included in the repository
-
-SQLite database runs locally (qride.db)
-
-QR verification works only when backend APIs are active
-
-Default admin credentials (if any) are configured in backend
-
-Future Enhancements
-
-Online payment gateway integration
-
-Mobile application support
-
-Email / SMS notifications
-
-Cloud database deployment
-
-Analytics dashboard for admin
-
- Developed For
-
-Sri Ramakrishna Engineering College (SREC)
-Smart Campus Transportation Management
-
-Conclusion
-
-QRide provides a secure, scalable, and efficient solution for managing campus transportation digitally.
-By integrating QR-based validation and role-based dashboards, it significantly improves transparency, security, and ease of use for all stakeholders.
+© 2026 QRide Team | Efficiency in Every Mile.

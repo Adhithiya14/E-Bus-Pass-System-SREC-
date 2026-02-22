@@ -95,16 +95,35 @@ db.serialize(() => {
       db.get(`SELECT COUNT(*) as count FROM bus_routes`, (err, row) => {
         if (row && row.count === 0) {
           const defaultRoutes = [
-            { no: '101', name: 'Green Valley Route', stops: 'Main Gate, Library, Hostels, Sports Complex', timings: '07:30 AM - 05:00 PM', bus: 'TN-37-G-101' },
-            { no: '102', name: 'City Express', stops: 'Railway Station, City Center, North Campus, Admin Block', timings: '07:45 AM - 05:15 PM', bus: 'TN-37-C-102' },
-            { no: '103', name: 'South Line', stops: 'South Gate, Engineering Dept, Medical Centre, Cafeteria', timings: '08:00 AM - 05:30 PM', bus: 'TN-37-S-103' },
-            {
-              no: '3',
-              name: 'Nava India',
-              stops: 'Nava India, Lakshmi Mills (Airtel), Lakshmi Mills (DPF ST), Mani High School, Women’s Polytechnic, Gandhipuram, 100 Feet Road, Power House, Sivananda Colony, Housing Unit, Kavundampalayam (Signal), Cheran Nagar, Viswanathapuram',
-              timings: '07:27 AM, 07:30 AM, 07:32 AM, 07:34 AM, 07:36 AM, 07:40 AM, 07:43 AM, 07:46 AM, 07:48 AM, 07:55 AM, 08:00 AM, 08:01 AM, 08:05 AM',
-              bus: '3'
-            }
+            { no: '1', name: 'Route 1', stops: 'Singanallur, Varadharajapuuram, ESI, Lions, Ramanujam Nagar, Manis theatre, Gandhimanagar, VOC Nagar, FC Godown', timings: '7.35, 7.37, 7.40, 7.42, 7.45, 7.47, 7.55, 7.58, 8.02', bus: 'TN 38 BA 6699' },
+            { no: '2', name: 'Route 2', stops: 'Chinniampalayam, R.G.Pudur, Thottipalayam pirivu, Gold winner, SITRA, Mahindra Pumps, Nehru Nagar I, Nehru Nagar II, NGP, Kalapatti, VilanKuruchi', timings: '7.40, 7.42, 7.44, 7.46, 7.48, 7.50, 7.52, 7.52, 7.54, 7.58, 8.00', bus: 'TN 38 BR 1299' },
+            { no: '3', name: 'Route 3', stops: 'Omni Bus Stop, Lakshmi puram, Ganapathy, ROOTS, Sanganoor, Kannappa Nagar', timings: '7.50, 7.52, 7.55, 7.58, 8.00, 8.02', bus: 'TN 38 BA 6499' },
+            { no: '4', name: 'Route 4', stops: 'Nava India, ESSO Bunk, Krishnammal college, Tidel Park, Thanneer pandal, Bharathi Nagar, Cheran Ma Nagar, Water Tank', timings: '7.30, 7.32, 7.35, 7.40, 7.45, 7.46, 7.50, 8.00', bus: 'TN 38 BA 5799' },
+            { no: '5', name: 'Route 5', stops: 'Peelamedu, Anna Nagar, National Model School, GRG School, Amman Kovil', timings: '7.35, 7.37, 7.40, 7.45, 8.0', bus: 'TN 38 BE 2599' },
+            { no: '6', name: 'Route 6', stops: 'Sri Ramakrishna Hospital, Lakshmi Mills, Kaikadai, GKNM Hospital, Women’s Polytechnic, Gandhipuram, Cheran Nagar', timings: '7.35, 7.45, 7.50, 7.52, 7.58, 8.00, 8.10', bus: 'TN 38 AV 2867' },
+            { no: '7', name: 'Route 7', stops: 'VKK Menon Road, Kalyan, Karpagam Complex, Sivananda Colony, Pudhuppalam', timings: '7.40, 7.45, 7.47, 7.55, 8.00', bus: 'TN 38 AY 4045' },
+            { no: '8', name: 'Route 8', stops: 'Textool, CMS, Bharathi Nagar, Sivanandapuram, Amman Kovil, Saravanampatti, Sunnambukalvai', timings: '7.55, 8.00, 8.05, 8.10, 8.15, 8.16, 8.20', bus: 'TN 38 AL 9577' },
+            { no: '9', name: 'Route 9', stops: 'Power House, Alegesan Road, Sree Valli, Eru Company, Teacher Colony', timings: '7.45, 7.50, 7.55, 8.00, 8.20', bus: 'TN 38 BP 8299' },
+            { no: '10', name: 'Route 10', stops: 'Pachapalayam, Chettipalaym, Priya Nagar, LIC Colony, Selvapuram-pulimara, High School, ChettiVeedi, Theppakulam, Best Bakery', timings: '7.25, 7.27, 7.32, 7.35, 7.37, 7.40, 7.42, 7.43, 7.45', bus: 'TN 38 BP 7399' },
+            { no: '11', name: 'Route 11', stops: 'Marudhamalai, Kalveerampalayam, Navavoor pirivu, Thiruvalluvar Nagar, Gopala Puram, Anna Nagar, TVS Nagar, KNG pudur', timings: '7.35, 7.40, 7.43, 7.45, 7.55, 8.00, 8.05, 8.10', bus: 'TN 38 AS 8899' },
+            { no: '12', name: 'Route 12', stops: 'Vadavalli, Mullai Nagar Stop I, Mullai Nagar Stop II, Perumal kovil', timings: '7.45, 7.48, 7.50, 7.52', bus: 'TN 38 BE 2499' },
+            { no: '13', name: 'Route 13', stops: 'Venkitapuram, Velandipalayam, Kovilmedu, Sivaji Colony, Poompuhar Nagar, P & T Colony, Sakthi Nagar', timings: '7.48, 7.50, 7.51, 7.52, 8.00, 8.02, 8.03', bus: 'TN 38 BA 4699' },
+            { no: '14', name: 'Route 14', stops: 'R.S. Puram, Milk Depot, Lawley Road, KTVR, P & T Colony, Puliyamaram, Kavundampalayam', timings: '7.40, 7.45, 7.50, 7.55, 7.57, 8.00, 8.05', bus: 'TN 38 AV 9190' },
+            { no: '15', name: 'Route 15', stops: 'Thondamuthur, Deenampalayam, Onampalayam, P.N. Pudur, Agri College-GateI, Kovilmedu, Edayarpalayam', timings: '7.30, 7.35, 7.40, 7.50, 7.52, 7.55, 8.00', bus: 'TN 38 AV 2874' },
+            { no: '16', name: 'Route 16', stops: 'TVS Bus stop, Venkitapuram, Siva Sakthi Theatre, ITI, Goundar Mills', timings: '7.50, 7.55, 8.00, 8.10, 8.12', bus: 'TN 28 L 2566' },
+            { no: '17', name: 'Route 17', stops: 'LMW, Lions Club, Gas Company, NSN Palayam, Raaki Palayam, Thoppampatti Pirivu, NGGO Colony – Gate', timings: '7.55, 8.00, 8.02, 8.10, 8.12, 8.15, 8.20', bus: 'TN 38 BR 1499' },
+            { no: '18', name: 'Route 18', stops: 'Veerapandi Pirivu, Pricol, Thirumurugan Nagar', timings: '7.55, 8.00, 8.15', bus: 'TN 38 AC 2700' },
+            { no: '19', name: 'Route 19', stops: 'Annur Bus Stop, Karuna Theatre, KG School, KariamPalayam, EllamPalayam, Ganeshapuram, Kunnathur, KovilPalayam I, KovilPalayam II, Kottai Pirivu, Kottai, Vaiyampalayam, Idigarai', timings: '7.35, 7.37, 7.40, 7.45, 7.47, 7.50, 7.55, 8.00, 8.02, 8.10, 8.15, 8.20, 8.22', bus: 'TN 38 AY 3951' },
+            { no: '20', name: 'Route 20', stops: 'Mettupalayam, Annai Velankanni', timings: '7.35, 7.45', bus: 'TN 38 BA 4899' },
+            { no: '21', name: 'Route 21', stops: 'Co-op Colony, Meenakshi Hospital, CTC, Kuttayur, Gandhi Nagar, EB Colony, Teachers Colony, Union Office, Karamadai Bus stand, Jothipuram', timings: '7.30, 7.32, 7.33, 7.38, 7.40, 7.42, 7.44, 7.50, 7.55, 8.10', bus: 'BA 6399' },
+            { no: '22', name: 'Route 22', stops: 'Karamadai, RV College, Bettathapuram, Thanneer pandal, Kottaipirivu, Mathampalayam, Shanthi Medu, Press colony, Thiruvalluvar Nagar', timings: '7.40, 7.41, 7.43, 7.45, 7.47, 7.50, 7.55, 7.57, 8.00', bus: 'TN 38 AE 9468' },
+            { no: '23', name: 'Route 23', stops: 'Vannan Kovil, Perianaicken Palayam', timings: '7.55, 8.00', bus: 'TN 38 BR 2199' },
+            { no: '24', name: 'Route 24', stops: 'Perks School, Sowripalayam I, Sowripalayam II, Udayampalayam, Meena Estate, Puliyakulam, Ramanathapuram, Thomas Park, Central Theatre', timings: '7.30, 7.33, 7.34, 7.37, 7.40, 7.42, 7.45, 7.50, 8.00', bus: 'TN 38 BR 1699' },
+            { no: '25', name: 'Route 25', stops: 'Sundakkamuthur, Ever Bright, Om Sakthi Nagar, TVS Matric. School, Kulathupalayam, VLB College, Kovaipudhur pirivu, B.K. Pudhur, Vijayalakshmi Mills, Edayarpalayam pirivu, Kuniamuthur, Athupalam', timings: '7.25, 7.28, 7.30, 7.32, 7.35, 7.37, 7.40, 7.42, 7.44, 7.46, 7.50, 7.53', bus: 'TN 38 BR 0799' },
+            { no: '26', name: 'Route 26', stops: 'Jayendra School, Ondhipudur Raja-Rani, Shanthi Gears, Vasantha Milla, Singanallur Hous. Unit, Kulatheri, Sowripalayam pirivu', timings: '7.25, 7.30, 7.32, 7.34, 7.38, 7.40, 7.45', bus: 'TN 38 BR 1099' },
+            { no: '27', name: 'Route 27', stops: 'Sulur, Ranganathapuram, Pappampatti Pirivu, Ondhipudur, Studio, Sungam, Housing Unit, Venugopal Hosital', timings: '7.10, 7.15, 7.25, 7.30, 7.40, 7.45, 8.00, 8.10', bus: 'TN 38 BP 8199' },
+            { no: '28', name: 'Route 28', stops: 'Premier Mills, Othakal Mandapam, Malumichampatty, Eachanari Temple, Sundarapuram, Podanur, Ukkadam, Vysial Street, G.N.Mills', timings: '7.12, 7.15, 7.20, 7.25, 7.30, 7.45, 7.51, 7.56, 8.10', bus: 'TN 38 BR 2399' },
+            { no: '29', name: 'Route 29', stops: 'DSP, Marakkadai, V.H.Road, Perumal Kovil, Flower Market, Thudiyalur, Vadamadurai, NGGO Colony', timings: '7.45, 7.50, 7.52, 7.55, 7.57, 8.15, 8.17, 8.20', bus: 'TN 38 AE 9015' }
           ];
           defaultRoutes.forEach(r => {
             db.run(`INSERT INTO bus_routes (route_number, route_name, stops, timings, bus_number) VALUES (?, ?, ?, ?, ?)`,

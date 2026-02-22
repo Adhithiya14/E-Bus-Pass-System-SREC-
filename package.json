@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "node server/index.cjs"
+    "server": "nodemon server/index.cjs"
   },
   "dependencies": {
     "aos": "^2.3.4",
@@ -22,12 +22,14 @@
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.1.0",
     "jspdf-autotable": "^5.0.7",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.562.0",
     "nodemon": "^3.1.11",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.11.0",
     "sqlite3": "^5.1.7"
   },

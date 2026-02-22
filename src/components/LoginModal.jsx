@@ -142,6 +142,7 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                     student_type: 'Day Scholar',
                     bus_number: '',
                     bus_stop_name: '',
+                    route_number: '',
                     profile_pic: ''
                 });
 
@@ -302,6 +303,7 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                                     >
                                         <option value="student">👨‍🎓 Student Account</option>
                                         <option value="admin">🔐 Admin Account</option>
+                                        <option value="driver">🚌 Driver Account</option>
                                     </select>
                                 </div>
                             )}
@@ -309,67 +311,88 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                             {isRegister && formData.role !== 'admin' && (
                                 <div className="register-fields" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                     {/* Personal Info */}
-                                    <div className="form-group">
-                                        <User size={18} className="input-icon" />
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            placeholder="Full Name (e.g. John Doe)"
-                                            value={formData.name}
-                                            onChange={handleChange}
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="form-row">
+                                    {formData.role === 'student' && (
                                         <div className="form-group">
-                                            <Hash size={18} className="input-icon" />
+                                            <User size={18} className="input-icon" />
                                             <input
                                                 type="text"
-                                                name="roll_number"
-                                                placeholder="SREC Register Number"
-                                                value={formData.roll_number}
+                                                name="name"
+                                                placeholder="Full Name (e.g. John Doe)"
+                                                value={formData.name}
                                                 onChange={handleChange}
                                                 required
                                             />
                                         </div>
-                                        <div className="form-group">
-                                            <GraduationCap size={18} className="input-icon" />
-                                            <select
-                                                name="year"
-                                                value={formData.year}
-                                                onChange={handleChange}
-                                                required
-                                            >
-                                                <option value="">Year</option>
-                                                <option value="1st Year">1st Year</option>
-                                                <option value="2nd Year">2nd Year</option>
-                                                <option value="3rd Year">3rd Year</option>
-                                                <option value="4th Year">4th Year</option>
-                                                <option value="5th Year">5th Year</option>
-                                            </select>
-                                        </div>
-                                    </div>
+                                    )}
 
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <Building2 size={18} className="input-icon" />
-                                            <select
-                                                name="department"
-                                                value={formData.department}
-                                                onChange={handleChange}
-                                                required
-                                            >
-                                                <option value="">Department</option>
-                                                <option value="CSE">CSE</option>
-                                                <option value="ECE">ECE</option>
-                                                <option value="EEE">EEE</option>
-                                                <option value="MECH">MECH</option>
-                                                <option value="CIVIL">CIVIL</option>
-                                                <option value="IT">IT</option>
-                                                <option value="MBA">MBA</option>
-                                            </select>
+                                    {formData.role === 'student' && (
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <Hash size={18} className="input-icon" />
+                                                <input
+                                                    type="text"
+                                                    name="roll_number"
+                                                    placeholder="SREC Register Number"
+                                                    value={formData.roll_number}
+                                                    onChange={handleChange}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <GraduationCap size={18} className="input-icon" />
+                                                <select
+                                                    name="year"
+                                                    value={formData.year}
+                                                    onChange={handleChange}
+                                                    required
+                                                >
+                                                    <option value="">Year</option>
+                                                    <option value="1st Year">1st Year</option>
+                                                    <option value="2nd Year">2nd Year</option>
+                                                    <option value="3rd Year">3rd Year</option>
+                                                    <option value="4th Year">4th Year</option>
+                                                    <option value="5th Year">5th Year</option>
+                                                </select>
+                                            </div>
                                         </div>
+                                    )}
+
+                                    {formData.role === 'student' && (
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <Building2 size={18} className="input-icon" />
+                                                <select
+                                                    name="department"
+                                                    value={formData.department}
+                                                    onChange={handleChange}
+                                                    required
+                                                >
+                                                    <option value="">Department</option>
+                                                    <option value="CSE">CSE</option>
+                                                    <option value="ECE">ECE</option>
+                                                    <option value="EEE">EEE</option>
+                                                    <option value="MECH">MECH</option>
+                                                    <option value="CIVIL">CIVIL</option>
+                                                    <option value="IT">IT</option>
+                                                    <option value="MBA">MBA</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <Phone size={18} className="input-icon" />
+                                                <input
+                                                    type="tel"
+                                                    name="phone_number"
+                                                    placeholder="Phone Number"
+                                                    value={formData.phone_number}
+                                                    onChange={handleChange}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Driver Phone Number */}
+                                    {formData.role === 'driver' && (
                                         <div className="form-group">
                                             <Phone size={18} className="input-icon" />
                                             <input
@@ -381,63 +404,69 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                                                 required
                                             />
                                         </div>
-                                    </div>
+                                    )}
 
-                                    {/* Gender & Student Type */}
-                                    <div className="form-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
-                                        <label style={{ fontSize: '14px', fontWeight: '600', color: '#64748b' }}>Gender</label>
-                                        <div style={{ display: 'flex', gap: '20px' }}>
-                                            <label className="radio-label">
-                                                <input
-                                                    type="radio"
-                                                    name="gender"
-                                                    value="Male"
-                                                    checked={formData.gender === 'Male'}
-                                                    onChange={handleChange}
-                                                    required
-                                                /> Male
-                                            </label>
-                                            <label className="radio-label">
-                                                <input
-                                                    type="radio"
-                                                    name="gender"
-                                                    value="Female"
-                                                    checked={formData.gender === 'Female'}
-                                                    onChange={handleChange}
-                                                /> Female
-                                            </label>
+                                    {/* Gender (Student only?) - Let's keep for all if helpful, but usually for ID. 
+                                        Let's wrap in student check for now to keep driver form cleaner as requested. 
+                                    */}
+                                    {formData.role === 'student' && (
+                                        <div className="form-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+                                            <label style={{ fontSize: '14px', fontWeight: '600', color: '#64748b' }}>Gender</label>
+                                            <div style={{ display: 'flex', gap: '20px' }}>
+                                                <label className="radio-label">
+                                                    <input
+                                                        type="radio"
+                                                        name="gender"
+                                                        value="Male"
+                                                        checked={formData.gender === 'Male'}
+                                                        onChange={handleChange}
+                                                        required
+                                                    /> Male
+                                                </label>
+                                                <label className="radio-label">
+                                                    <input
+                                                        type="radio"
+                                                        name="gender"
+                                                        value="Female"
+                                                        checked={formData.gender === 'Female'}
+                                                        onChange={handleChange}
+                                                    /> Female
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    <div className="form-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
-                                        <label style={{ fontSize: '14px', fontWeight: '600', color: '#64748b' }}>Student Type</label>
-                                        <div className="role-switch" style={{ width: '100%', marginBottom: '0' }}>
-                                            <label className={`role-option ${formData.student_type === 'Day Scholar' ? 'active' : ''}`}>
-                                                <input
-                                                    type="radio"
-                                                    name="student_type"
-                                                    value="Day Scholar"
-                                                    checked={formData.student_type === 'Day Scholar'}
-                                                    onChange={handleChange}
-                                                    required
-                                                />
-                                                Day Scholar
-                                            </label>
-                                            <label className={`role-option ${formData.student_type === 'Hosteller' ? 'active' : ''}`}>
-                                                <input
-                                                    type="radio"
-                                                    name="student_type"
-                                                    value="Hosteller"
-                                                    checked={formData.student_type === 'Hosteller'}
-                                                    onChange={handleChange}
-                                                />
-                                                Hosteller
-                                            </label>
+                                    {formData.role === 'student' && (
+                                        <div className="form-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+                                            <label style={{ fontSize: '14px', fontWeight: '600', color: '#64748b' }}>Student Type</label>
+                                            <div className="role-switch" style={{ width: '100%', marginBottom: '0' }}>
+                                                <label className={`role-option ${formData.student_type === 'Day Scholar' ? 'active' : ''}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="student_type"
+                                                        value="Day Scholar"
+                                                        checked={formData.student_type === 'Day Scholar'}
+                                                        onChange={handleChange}
+                                                        required
+                                                    />
+                                                    Day Scholar
+                                                </label>
+                                                <label className={`role-option ${formData.student_type === 'Hosteller' ? 'active' : ''}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="student_type"
+                                                        value="Hosteller"
+                                                        checked={formData.student_type === 'Hosteller'}
+                                                        onChange={handleChange}
+                                                    />
+                                                    Hosteller
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
                                     {/* Conditional Bus Details */}
-                                    {formData.student_type === 'Day Scholar' && (
+                                    {formData.student_type === 'Day Scholar' && formData.role === 'student' && (
                                         <div className="form-row">
                                             <div className="form-group">
                                                 <input
@@ -455,6 +484,21 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                                                     name="bus_stop_name"
                                                     placeholder="Bus Stop Name"
                                                     value={formData.bus_stop_name}
+                                                    onChange={handleChange}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {formData.role === 'driver' && (
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <input
+                                                    type="text"
+                                                    name="bus_number"
+                                                    placeholder="Assigned Bus Number"
+                                                    value={formData.bus_number}
                                                     onChange={handleChange}
                                                     required
                                                 />
@@ -494,8 +538,8 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                                 </div>
                             )}
 
-                            {/* Admin Name Field */}
-                            {isRegister && formData.role === 'admin' && (
+                            {/* Admin/Driver Name Field */}
+                            {isRegister && (formData.role === 'admin' || formData.role === 'driver') && (
                                 <div className="form-group">
                                     <User size={18} className="input-icon" />
                                     <input
@@ -510,11 +554,11 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                             )}
 
                             <div className="form-group">
-                                {formData.role === 'admin' ? <Mail size={18} className="input-icon" /> : <Hash size={18} className="input-icon" />}
+                                {formData.role !== 'student' ? <Mail size={18} className="input-icon" /> : <Hash size={18} className="input-icon" />}
                                 <input
-                                    type={formData.role === 'admin' ? "email" : "text"}
+                                    type={formData.role !== 'student' ? "email" : "text"}
                                     name="email"
-                                    placeholder={formData.role === 'admin' ? "Admin Email Address" : "SREC Register Number"}
+                                    placeholder={formData.role !== 'student' ? "Email Address" : "SREC Register Number"}
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
@@ -572,6 +616,16 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                                         />
                                         Admin
                                     </label>
+                                    <label className={`role-option ${formData.role === 'driver' ? 'active' : ''}`}>
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value="driver"
+                                            checked={formData.role === 'driver'}
+                                            onChange={handleChange}
+                                        />
+                                        Driver
+                                    </label>
                                 </div>
                             )}
 
@@ -592,7 +646,7 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
         )
     );
 };

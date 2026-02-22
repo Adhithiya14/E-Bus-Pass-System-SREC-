@@ -109,23 +109,35 @@ app.get('/api/health', (req, res) => {
 
 // Register API
 app.post('/api/register', async (req, res) => {
-    const { name, email, password, role, roll_number, department, year, phone_number, gender, student_type, bus_number, bus_stop_name, profile_pic } = req.body;
+    const { name, email, password, role, roll_number, department, year, phone_number, gender, student_type, bus_number, bus_stop_name, route_number, profile_pic } = req.body;
     const normalizedEmail = email?.trim().toLowerCase();
 
     // Basic validation
-    if (!name || !normalizedEmail || !password || !department || (role !== 'admin' && !roll_number)) {
-        return res.status(400).json({ error: role === 'admin' ? "Missing admin fields" : "Missing required fields (Register Number is mandatory)" });
+    if (!name || !normalizedEmail || !password || (role === 'student' && (!roll_number || !department)) || (role === 'admin' && !department)) {
+        return res.status(400).json({ error: role === 'admin' ? "Missing admin fields" : role === 'driver' ? "Missing driver fields" : "Missing required fields (Register Number is mandatory)" });
     }
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        if (role === 'driver') {
+            const sqlDriver = `INSERT INTO drivers (name, email, password, phone_number, bus_number, profile_pic) VALUES (?, ?, ?, ?, ?, ?)`;
+            const paramsDriver = [name, normalizedEmail, hashedPassword, phone_number, bus_number, profile_pic];
+
+            db.run(sqlDriver, paramsDriver, function (err) {
+                if (err) {
+                    if (err.message.includes('UNIQUE constraint failed')) {
+                        return res.status(400).json({ error: "Email already exists" });
+                    }
+                    return res.status(500).json({ error: "Driver Insert Failed: " + err.message });
+                }
+                res.json({ id: this.lastID, message: "Driver registered successfully" });
+            });
+            return;
+        }
+
         // 1. Insert into users (Profile Data)
-        // Note: keeping email in users table for now as redundant or display, but auth is via credentials table. 
-        // Best practice: Remove sensitive data from users if pure separation is desired, but keeping email in users is common for profile display.
-        // However, the prompt asked to SEPARATE. So I will focus on 'credentials' having the auth truth.
-        // We will insert 'email' into users as well for easier fetching of profile, OR we can leave it null/empty there if we want strict separation.
-        // Let's keep email in users for profile display convenience, but rely on credentials for auth.
+        // ... (existing student/admin logic)
         const sqlUser = `INSERT INTO users (name, email, password, role, roll_number, department, year, phone_number, gender, student_type, bus_number, bus_stop_name, profile_pic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const paramsUser = [
@@ -207,6 +219,10 @@ app.post('/api/login', (req, res) => {
                JOIN credentials c ON u.id = c.user_id 
                WHERE (u.roll_number = ? OR c.email = ?) AND u.role = 'student'`;
         params = [identifier, identifier.toLowerCase()];
+    } else if (role === 'driver') {
+        // Drivers log in with Email (from drivers table)
+        sql = `SELECT *, 'driver' as role, password as valid_password FROM drivers WHERE email = ?`;
+        params = [identifier.toLowerCase()];
     } else {
         // Fallback generic
         sql = `SELECT u.*, c.password as valid_password 
@@ -374,7 +390,7 @@ app.post('/api/create-admin', async (req, res) => {
             });
         });
     } catch (error) {
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ error: "Server error", details: error.message });
     }
 });
 
@@ -1125,6 +1141,66 @@ app.get('/api/route-change/my-requests/:userId', (req, res) => {
     db.all(`SELECT * FROM route_change_requests WHERE user_id = ? ORDER BY travel_date DESC`, [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: "Database error" });
         res.json(rows);
+    });
+});
+
+// --- Driver Dashboard APIs ---
+
+// 1. Get Assigned Bus & Route Details
+app.get('/api/driver/bus-details/:driverId', (req, res) => {
+    const { driverId } = req.params;
+    const sql = `
+        SELECT d.bus_number, d.morning_timing, d.evening_timing, r.route_number, r.route_name, r.stops
+        FROM drivers d
+        LEFT JOIN bus_routes r ON d.bus_number = r.bus_number
+        WHERE d.id = ?
+    `;
+    db.get(sql, [driverId], (err, row) => {
+        if (err) return res.status(500).json({ error: "Database error" });
+        if (!row) return res.status(404).json({ error: "Driver data not found" });
+        res.json(row);
+    });
+});
+
+// 2. Get Student List for Assigned Bus
+app.get('/api/driver/students/:routeNumber', (req, res) => {
+    const { routeNumber } = req.params;
+    const sql = `
+        SELECT u.roll_number, u.name, u.department, p.pass_type, p.status, p.valid_until
+        FROM users u
+        JOIN passes p ON u.id = p.user_id
+        WHERE p.route_number = ? AND p.status IN ('active', 'pending', 'expired')
+        ORDER BY u.roll_number ASC
+    `;
+    db.all(sql, [routeNumber], (err, rows) => {
+        if (err) return res.status(500).json({ error: "Database error" });
+        res.json(rows || []);
+    });
+});
+
+// 3. Update Custom Timings
+app.post('/api/driver/update-timings', (req, res) => {
+    const { driverId, morning_timing, evening_timing } = req.body;
+    if (!driverId) return res.status(400).json({ error: "Missing Driver ID" });
+
+    const sql = `UPDATE drivers SET morning_timing = ?, evening_timing = ? WHERE id = ?`;
+    db.run(sql, [morning_timing, evening_timing, driverId], function (err) {
+        if (err) return res.status(500).json({ error: "Database error" });
+        res.json({ success: true, message: "Timings updated successfully" });
+    });
+});
+
+
+// 5. Driver Notifications (Read-Only Alerts from Admin)
+app.get('/api/driver/notifications', (req, res) => {
+    const sql = `
+        SELECT * FROM notifications 
+        WHERE type IN ('emergency', 'route_change') 
+        ORDER BY created_at DESC LIMIT 10
+    `;
+    db.all(sql, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: "Database error" });
+        res.json(rows || []);
     });
 });
 

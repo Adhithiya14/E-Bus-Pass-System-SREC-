@@ -69,7 +69,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState(null);
-    const [newRoute, setNewRoute] = useState({ route_number: '', route_name: '', stops: '', timings: '', bus_number: '' });
+    const [newRoute, setNewRoute] = useState({ route_number: '', route_name: '', stops: '', bus_number: '' });
     const [editingRoute, setEditingRoute] = useState(null);
     const [rejectionModal, setRejectionModal] = useState({ isOpen: false, passId: null, reason: '' });
 
@@ -275,7 +275,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                 body: JSON.stringify(newRoute)
             });
 
-            setNewRoute({ route_number: '', route_name: '', stops: '', timings: '', bus_number: '' });
+            setNewRoute({ route_number: '', route_name: '', stops: '', bus_number: '' });
             setEditingRoute(null);
             fetchRoutes();
         } catch (err) {
@@ -289,7 +289,6 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
             route_number: route.route_number,
             route_name: route.route_name,
             stops: route.stops,
-            timings: route.timings || '',
             bus_number: route.bus_number || ''
         });
     };
@@ -547,9 +546,9 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                 <div className="route-select-wrapper">
                                     <Bus size={18} />
                                     <select value={selectedRoute} onChange={(e) => setSelectedRoute(e.target.value)}>
-                                        <option value="All">All Routes</option>
+                                        <option value="All">All Bus Services</option>
                                         {routes.map(r => (
-                                            <option key={r.id} value={r.route_number}>Route {r.route_number}</option>
+                                            <option key={r.id} value={r.route_number}>{r.route_name}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -647,7 +646,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                     <tr>
                                         <th>Student Details</th>
                                         <th>Academic Info</th>
-                                        <th>Route & Duration</th>
+                                        <th>Service & Duration</th>
                                         <th>Applied Date</th>
                                         <th>Documents</th>
                                         <th>Payment</th>
@@ -675,7 +674,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                                 <td>
                                                     <div className="boarding-info">
                                                         <strong>{app.boarding_point}</strong>
-                                                        <div className="sub">{app.duration} ({app.route_number || 'N/A'})</div>
+                                                        <div className="sub">{app.duration} ({app.route_name || 'Regular Service'})</div>
                                                         {app.secondary_routes && app.secondary_routes.length > 0 && (
                                                             <div className="sub-routes" style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
                                                                 + Interchanges: {app.secondary_routes.join(', ')}
@@ -743,7 +742,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                 <h4>{editingRoute ? 'Edit Route' : 'Add New Route'}</h4>
                                 <form onSubmit={handleAddRoute}>
                                     <div className="form-group-admin">
-                                        <label>Route #</label>
+                                        <label>Service ID (Internal)</label>
                                         <input type="text" value={newRoute.route_number} onChange={e => setNewRoute({ ...newRoute, route_number: e.target.value })} placeholder="e.g. 101" required />
                                     </div>
                                     <div className="form-group-admin">
@@ -755,10 +754,6 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                             <label>Bus Number</label>
                                             <input type="text" value={newRoute.bus_number} onChange={e => setNewRoute({ ...newRoute, bus_number: e.target.value })} placeholder="TN-37-B-1234" />
                                         </div>
-                                        <div className="form-group-admin">
-                                            <label>Timings</label>
-                                            <input type="text" value={newRoute.timings} onChange={e => setNewRoute({ ...newRoute, timings: e.target.value })} placeholder="07:30 AM - 05:00 PM" />
-                                        </div>
                                     </div>
                                     <div className="form-group-admin">
                                         <label>Stops (Comma separated)</label>
@@ -768,7 +763,7 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                         <button type="submit" className="btn-add-route">{editingRoute ? 'Update Route' : 'Add Route'}</button>
                                         {editingRoute && <button type="button" className="btn-cancel-edit" onClick={() => {
                                             setEditingRoute(null);
-                                            setNewRoute({ route_number: '', route_name: '', stops: '', timings: '', bus_number: '' });
+                                            setNewRoute({ route_number: '', route_name: '', stops: '', bus_number: '' });
                                         }}>Cancel</button>}
                                     </div>
                                 </form>
@@ -780,12 +775,10 @@ const AdminDashboard = ({ onLogout, onUpdateUser }) => {
                                         <div key={r.id} className="route-v-item">
                                             <div className="r-main">
                                                 <div className="r-head">
-                                                    <span className="r-num">#{r.route_number}</span>
                                                     <span className="r-name">{r.route_name}</span>
                                                 </div>
                                                 <div className="r-details">
                                                     <div className="r-detail-item"><Bus size={12} /> {r.bus_number || 'No Bus Assigned'}</div>
-                                                    <div className="r-detail-item"><Clock size={12} /> {r.timings || 'No Timings Set'}</div>
                                                 </div>
                                                 <div className="r-stops">{r.stops}</div>
                                             </div>

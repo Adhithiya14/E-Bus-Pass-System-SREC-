@@ -1,95 +1,220 @@
-# QRide – SREC Campus Bus System
+QRide – Smart Campus Bus Pass Management System
 
-QRide is a web-based smart campus bus pass management system developed for Sri Ramakrishna Engineering College (SREC).  
-It digitizes bus pass issuance, verification, and route management using QR codes.
+QRide is a web-based smart campus bus pass management system developed for Sri Ramakrishna Engineering College (SREC).
+It digitizes the complete bus pass lifecycle — issuance, renewal, verification, and route management — using QR code–based validation, making the system secure, efficient, and fully paperless.
 
----
+Project Objective
 
-## 🚀 Key Features
+The goal of QRide is to eliminate manual bus pass handling and introduce a secure, transparent, and automated system that benefits students, bus checkers, and administrators by:
 
-- Student registration with profile photo
-- Digital bus pass with QR code and unique pass ID
-- Regular bus pass and fee payment
-- Pay-per-ride ticket for occasional travel
-- Hosteller lite pass and emergency pass support
-- Route flexibility and alternate bus travel
-- Admin verification and approval dashboard
-- Fully paperless and secure system
+Reducing paperwork
 
----
+Preventing pass misuse
 
-## 🛠️ Technologies Used
+Enabling real-time verification
 
-- Frontend: React + Vite
-- Backend: Node.js with Express
-- Database: SQLite (local)
-- QR Code based validation
-- HTML, CSS, JavaScript
+Simplifying fee and route management
 
----
 
-## ▶️ How to Run the Project
+Key Features
 
-open two terminals : run the command " npm run server "
-and in another run " npm run dev "
+Student Module
 
-### 📌 Prerequisites
+Student registration with profile photo
 
-Ensure the following are installed:
-- Node.js (v16 or above)
-- npm
-- Git (optional)
+Digital bus pass with unique Pass ID
 
----
+QR code–based bus pass
 
-### 📥 Step 1: Clone the Repository
+Regular bus pass fee payment
 
-```bash
+Pay-per-ride tickets for occasional travel
+
+Hosteller Lite Pass support
+
+Emergency pass generation
+
+Route flexibility & alternate bus travel
+
+View pass status (Active / Expired / Pending)
+
+QR scanner to verify pass validity
+
+Admin Module
+
+Admin dashboard for verification & approval
+
+Approve / reject bus pass applications
+
+Manage students, routes, and buses
+
+View fee defaulters
+
+Identify expired passes
+
+Download reports (PDF) for:
+
+Fee defaulters
+
+Expired passes
+
+Generate QR codes for validation
+
+Notification alerts for upcoming pass expiry
+
+Checker / Verification Support
+
+QR code validation for pass authenticity
+
+Real-time verification of:
+
+Valid student
+
+Expired pass
+
+Invalid or fake pass
+
+System Highlights
+
+Fully paperless bus pass system
+
+Secure QR code–based validation
+
+Role-based access (Student / Admin)
+
+Real-time pass verification
+
+Scalable and modular architecture
+
+Technologies Used
+
+Frontend
+
+React.js
+
+Vite
+
+HTML5
+
+CSS3
+
+JavaScript
+
+Backend
+
+Node.js
+
+Express.js
+
+Database
+
+SQLite (Local database)
+
+Other Tools
+
+QR Code generation & scanning
+
+Git & GitHub for version control
+
+Project Structure (Overview)
+
+QRide/
+│
+├── server/                 # Backend (Express + SQLite)
+│   ├── index.cjs
+│   ├── database.cjs
+│   └── qride.db
+│
+├── src/                    # Frontend (React)
+│   ├── components/
+│   ├── App.jsx
+│   └── main.jsx
+│
+├── public/
+├── package.json
+├── vite.config.js
+└── README.md
+
+
+How to Run the Project
+
+Prerequisites
+
+Ensure the following are installed on your system:
+
+Node.js (v16 or above)
+
+npm
+
+Git (optional)
+
+Step 1: Clone the Repository
+
+/// 
 git clone https://github.com/Adhithiya14/E-Bus-Pass-System-SREC-.git
-```
+///
 
+Step 2: Navigate to Project Folder
 
-### 📂 Step 2: Go into the Project Folder
-
-After cloning the repository, move into the project directory:
-
-```bash
+///
 cd E-Bus-Pass-System-SREC-
-```
+///
 
-### 📦 Step 3: Install Dependencies
+Step 3: Install Dependencies
 
-Run the following command to install all required packages:
-
-```bash
+///b
 npm install
-```
-### 🖥️ Step 4: Start Backend Server
+///
 
-Open a terminal in the project folder and run:
+Step 4: Start Backend Server
 
-```bash
+Open Terminal 1 and run:
+
+///
 npm run server
-```
+///
+Keep this terminal running 
 
-Keep this terminal running.
+Step 5: Start Frontend Server
 
-### 🌐 Step 5: Start Frontend
+Open Terminal 2 and run:
 
-Open a second terminal in the same project folder and run:
-
-```bash
 npm run dev
-```
 
-The application will open at:
+Application URL
 
-```text
 http://localhost:5173
-```
 
-### ⚠️ Notes
+Important Notes
 
-- Ensure backend is running before accessing the frontend
-- Node modules are not included in the repository
-- Use MySQL credentials as configured in the backend
+Backend must be running before accessing the frontend
+
+node_modules are not included in the repository
+
+SQLite database runs locally (qride.db)
+
+QR verification works only when backend APIs are active
+
+Default admin credentials (if any) are configured in backend
+
+Future Enhancements
+
+Online payment gateway integration
+
+Mobile application support
+
+Email / SMS notifications
+
+Cloud database deployment
+
+Analytics dashboard for admin
+
+ Developed For
+
+Sri Ramakrishna Engineering College (SREC)
+Smart Campus Transportation Management
+
+Conclusion
+
+QRide provides a secure, scalable, and efficient solution for managing campus transportation digitally.
+By integrating QR-based validation and role-based dashboards, it significantly improves transparency, security, and ease of use for all stakeholders.

@@ -83,15 +83,7 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
             const selectedRoute = routes.find(r => r.route_number === value);
             if (selectedRoute) {
                 const stopList = selectedRoute.stops.split(',').map(s => s.trim());
-                const timeList = selectedRoute.timings ? selectedRoute.timings.split(',').map(t => t.trim()) : [];
-
-                // Pair stops with timings
-                const pairedStops = stopList.map((stop, index) => ({
-                    stop,
-                    time: timeList[index] || 'N/A'
-                }));
-
-                setAvailableStops(pairedStops);
+                setAvailableStops(stopList);
 
                 setFormData(prev => ({
                     ...prev,
@@ -211,7 +203,7 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
                                         <option value="">Select Route</option>
                                         {routes.map(route => (
                                             <option key={route.id} value={route.route_number}>
-                                                Bus {route.route_number} - {route.route_name}
+                                                {route.route_name}
                                             </option>
                                         ))}
                                     </select>
@@ -243,9 +235,9 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
                                         required
                                     >
                                         <option value="">Select Boarding Stop</option>
-                                        {availableStops.map((item, idx) => (
-                                            <option key={idx} value={item.stop}>
-                                                {item.stop} ({item.time})
+                                        {availableStops.map((stop, idx) => (
+                                            <option key={idx} value={stop}>
+                                                {stop}
                                             </option>
                                         ))}
                                     </select>
@@ -302,7 +294,7 @@ const ApplyPassModal = ({ isOpen, onClose, onApplySubmit, userId }) => {
                                                                 transition: 'all 0.2s'
                                                             }}
                                                         >
-                                                            #{route.route_number}
+                                                            {route.route_name}
                                                         </button>
                                                     );
                                                 })

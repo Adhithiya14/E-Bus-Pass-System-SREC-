@@ -24,17 +24,15 @@ const BusRoutes = () => {
     };
 
     // Helper to format stops and timings
-    const formatStopsAndTimings = (stopsStr, timingsStr) => {
+    const formatStops = (stopsStr) => {
         if (!stopsStr) return "No stops listed";
         const stops = stopsStr.split(',').map(s => s.trim());
-        const timings = timingsStr ? timingsStr.split(',').map(t => t.trim()) : [];
 
         return (
             <div className="stops-list">
                 {stops.map((stop, index) => (
                     <div key={index} className="stop-item">
                         <span className="stop-name">{stop}</span>
-                        {timings[index] && <span className="stop-time"> - {timings[index]}</span>}
                     </div>
                 ))}
             </div>
@@ -73,7 +71,7 @@ const BusRoutes = () => {
                             <tr>
                                 <th>Bus Number</th>
                                 <th>Route Name</th>
-                                <th>Boarding Stops & Timings</th>
+                                <th>Boarding Stops</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -84,15 +82,14 @@ const BusRoutes = () => {
                                     <tr key={route.id} data-aos="fade-up">
                                         <td>
                                             <div className="bus-info">
-                                                <span className="bus-number-badge">BUS {route.route_number}</span>
-                                                <div className="bus-plate">{route.bus_number}</div>
+                                                <div className="bus-plate" style={{ fontSize: '1.2rem', fontWeight: '800', color: '#1F7A5A' }}>{route.bus_number}</div>
                                             </div>
                                         </td>
                                         <td className="route-name">
                                             {route.route_name}
                                         </td>
                                         <td>
-                                            {formatStopsAndTimings(route.stops, route.timings)}
+                                            {formatStops(route.stops)}
                                         </td>
                                     </tr>
                                 ))

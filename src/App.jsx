@@ -19,6 +19,7 @@ import GlobalHeader from './components/GlobalHeader';
 import GlobalFooter from './components/GlobalFooter';
 import NotFound from './components/NotFound';
 import CheckerVerification from './components/CheckerVerification';
+import DriverDashboard from './components/DriverDashboard';
 
 // Landing Page Component to group all landing sections
 const LandingPage = ({ onOpenLogin }) => {
@@ -84,7 +85,7 @@ function InnerApp() {
     localStorage.setItem('qride_user', JSON.stringify(userData));
     localStorage.setItem('qride_token', tokenData);
     setLoginOpen(false);
-    navigate(userData.role === 'admin' ? '/admin' : '/dashboard');
+    navigate(userData.role === 'admin' ? '/admin' : userData.role === 'driver' ? '/driver' : '/dashboard');
   };
 
   const handleLogout = () => {
@@ -108,11 +109,15 @@ function InnerApp() {
           <Route path="/" element={<LandingPage onOpenLogin={handleOpenLogin} />} />
           <Route
             path="/dashboard"
-            element={user && user.role !== 'admin' ? <StudentDashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} /> : <Navigate to="/" />}
+            element={user && user.role === 'student' ? <StudentDashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} /> : <Navigate to="/" />}
           />
           <Route
             path="/admin"
             element={user && user.role === 'admin' ? <AdminDashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/driver"
+            element={user && user.role === 'driver' ? <DriverDashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} /> : <Navigate to="/" />}
           />
           <Route path="/verify-checker/:checkerId" element={<CheckerVerification />} />
           <Route path="*" element={<NotFound />} />

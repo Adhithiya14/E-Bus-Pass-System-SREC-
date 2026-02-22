@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ArrowRight } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Navbar.css';
 import srecLogo from '../assets/srec_logo.png';
@@ -53,10 +53,14 @@ const Navbar = ({ user, onOpenLogin, onLogout }) => {
             {user ? (
               <button className="btn-outline" onClick={onLogout}>Logout</button>
             ) : (
-              <>
-                <button className="btn-outline" onClick={() => onOpenLogin('student')}>Student Login</button>
-                <button className="btn-filled" onClick={() => onOpenLogin('admin')}>Admin Login</button>
-              </>
+              <div className="hero-actions fade-in-up delay-2">
+                <button className="btn-primary" onClick={() => onOpenLogin('student', 'register')}>
+                  Apply for Bus Pass <ArrowRight size={18} />
+                </button>
+                <button className="btn-secondary" onClick={() => onOpenLogin('driver', 'register')}>
+                  Driver Registration
+                </button>
+              </div>
             )}
           </li>
         </ul>
@@ -76,6 +80,7 @@ const Navbar = ({ user, onOpenLogin, onLogout }) => {
           ) : (
             <>
               <button className="btn-outline" onClick={() => onOpenLogin('student')}>Student Login</button>
+              <button className="btn-outline" onClick={() => onOpenLogin('driver')}>Driver Login</button>
               <button className="btn-filled" onClick={() => onOpenLogin('admin')}>Admin Login</button>
             </>
           )}

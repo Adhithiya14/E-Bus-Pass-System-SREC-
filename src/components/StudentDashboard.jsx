@@ -296,7 +296,7 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
             amount: 50,
             summary: [
                 { label: 'Type', value: 'Single Ride' },
-                { label: 'Route', value: `#${routeNum}` }
+                { label: 'Destination', value: 'SREC Campus' }
             ],
             apiCall: async () => {
                 try {
@@ -382,7 +382,7 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
             amount: pass.amount,
             summary: [
                 { label: 'Pass ID', value: pass.id },
-                { label: 'Route', value: pass.route_number || 'N/A' }
+                { label: 'Destination', value: pass.boarding_point || 'N/A' }
             ],
             apiCall: async () => {
                 try {
@@ -588,7 +588,7 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                                                 <h3>Application Submitted</h3>
                                                 <p>Your pass application is currently under review by the details provided.</p>
                                                 <div className="application-summary">
-                                                    <p><strong>Applied for:</strong> {pass.route_number ? `Route #${pass.route_number}` : 'Bus Pass'}</p>
+                                                    <p><strong>Applying for:</strong> Regular Bus Pass</p>
                                                     <p><strong>Date:</strong> {new Date(pass.applied_at).toLocaleDateString()}</p>
                                                 </div>
                                                 <button className="btn-outline-large" disabled>
@@ -760,7 +760,7 @@ const StudentDashboard = ({ user, onLogout, onUpdateUser }) => {
                                 <div className="modal-content" style={{ textAlign: 'center', maxWidth: '300px' }} onClick={e => e.stopPropagation()}>
                                     <button className="modal-close" onClick={() => setSelectedTicket(null)}><XCircle size={24} /></button>
                                     <h3>One-Time Ticket</h3>
-                                    <p style={{ marginBottom: '20px', color: '#64748b' }}>Route #{selectedTicket.route_number}</p>
+                                    <p style={{ marginBottom: '20px', color: '#64748b' }}>Valid for SREC Campus Transit</p>
                                     <div style={{ background: 'white', padding: '15px', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', display: 'inline-block' }}>
                                         <QRCodeCanvas value={selectedTicket.qr_code} size={200} />
                                     </div>

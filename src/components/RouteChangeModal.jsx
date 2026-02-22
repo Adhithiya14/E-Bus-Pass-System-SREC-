@@ -75,7 +75,7 @@ const RouteChangeModal = ({ isOpen, onClose, userId, currentRoute, routes, onSub
                                     .filter(r => r.route_number !== currentRoute)
                                     .map(r => (
                                         <option key={r.id} value={r.route_number}>
-                                            Route #{r.route_number} - {r.route_name}
+                                            {r.route_name}
                                         </option>
                                     ))
                                 }

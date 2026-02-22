@@ -1,0 +1,370 @@
+/* Driver Dashboard - Premium Theme Alignment */
+:root {
+    --primary-gradient: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
+    --accent-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --danger-gradient: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    --driver-primary: #11998e;
+    --driver-primary-hover: #0d8a7c;
+    --text-primary: #1e293b;
+    --text-muted: #64748b;
+}
+
+.driver-dashboard {
+    min-height: 100vh;
+    background: radial-gradient(circle at top right, #f8fafc, #eef2f6);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+}
+
+/* Sidebar Styling - Consistent with Admin/Student where applicable */
+.driver-sidebar {
+    width: 280px;
+    background: white;
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 3rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    background: transparent;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.nav-item:hover {
+    background: #f1f5f9;
+    color: var(--text-primary);
+    transform: translateX(5px);
+}
+
+.nav-item.active {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 8px 20px rgba(17, 153, 142, 0.2);
+}
+
+/* Main Content Area */
+.driver-main {
+    flex: 1;
+    padding: 2.5rem;
+    overflow-y: auto;
+}
+
+.driver-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.driver-welcome h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.driver-welcome p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* Stats Overview */
+.driver-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+/* Glass Panels */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: var(--glass-shadow);
+    transition: transform 0.3s ease;
+}
+
+.glass-panel:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card-driver {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.stat-icon.bus {
+    background: var(--accent-gradient);
+}
+
+.stat-icon.students {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+}
+
+.stat-icon.status {
+    background: var(--primary-gradient);
+}
+
+.stat-info span {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.stat-info h3 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-top: 0.2rem;
+}
+
+/* Timing Management Section */
+.timing-management {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.card-header h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.timing-inputs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.timing-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.timing-field label {
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.timing-field input {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: var(--text-primary);
+    padding: 1.2rem;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.timing-field input:focus {
+    border-color: var(--driver-primary);
+    box-shadow: 0 0 0 4px rgba(17, 153, 142, 0.1);
+}
+
+.save-timings-large {
+    width: 100%;
+    padding: 1.2rem;
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.save-timings-large:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(17, 153, 142, 0.3);
+}
+
+/* Student List Styling */
+.driver-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    width: 300px;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-weight: 500;
+}
+
+.driver-table-container {
+    overflow-x: auto;
+}
+
+.driver-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.8rem;
+}
+
+.driver-table th {
+    text-align: left;
+    padding: 0 1.2rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.driver-table tr td {
+    background: white;
+    padding: 1.2rem;
+    font-weight: 600;
+}
+
+.driver-table tr td:first-child {
+    border-radius: 16px 0 0 16px;
+}
+
+.driver-table tr td:last-child {
+    border-radius: 0 16px 16px 0;
+}
+
+.status-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-badge.active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-badge.pending {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.status-badge.expired {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Logout Button */
+.logout-btn-sidebar {
+    margin-top: auto;
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.logout-btn-sidebar:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* Notifications Styling */
+.notification-card {
+    padding: 1.2rem;
+    border-radius: 16px;
+    background: white;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--driver-primary);
+    transition: all 0.2s;
+}
+
+.notification-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.notif-title {
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+}
+
+.notif-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}

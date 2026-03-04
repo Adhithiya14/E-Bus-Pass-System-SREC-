@@ -2,7 +2,7 @@ import React from 'react';
 import './Footer.css';
 import srecLogo from '../assets/srec_logo.png';
 
-const Footer = () => {
+const Footer = ({ onOpenLogin }) => {
     return (
         <footer id="contact" className="footer-section">
             <div className="container">
@@ -18,10 +18,9 @@ const Footer = () => {
                     <div className="footer-links">
                         <h3>Quick Links</h3>
                         <ul>
-                            <li><a href="#home">Home</a></li>
-                            <li><a href="#about">About Us</a></li>
-                            <li><a href="#routes">Routes</a></li>
-                            <li><a href="#status">Check Status</a></li>
+                            <li><button className="footer-link-btn" onClick={() => onOpenLogin('student', 'register')}>Student Registration</button></li>
+                            <li><button className="footer-link-btn" onClick={() => onOpenLogin('driver', 'register')}>Driver Registration</button></li>
+                            <li><button className="footer-link-btn" onClick={() => onOpenLogin('admin', 'register')}>Admin Registration</button></li>
                         </ul>
                     </div>
 

@@ -46,7 +46,7 @@ const LandingPage = ({ onOpenLogin }) => {
       <div id="routes"><BusRoutes /></div>
       {/* Removed TechStack section */}
       <div id="contact"><CTA onOpenLogin={() => onOpenLogin('student', 'register')} /></div>
-      <Footer />
+      <Footer onOpenLogin={onOpenLogin} />
     </>
   );
 };

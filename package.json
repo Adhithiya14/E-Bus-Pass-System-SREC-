@@ -9,7 +9,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "nodemon server/index.cjs"
+    "server": "nodemon server/index.cjs",
+    "sever": "npm run server"
   },
   "dependencies": {
     "aos": "^2.3.4",

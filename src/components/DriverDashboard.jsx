@@ -35,7 +35,9 @@ const DriverDashboard = ({ user, onLogout }) => {
         setLoading(true);
         try {
             const busInfo = await safeFetch(`/api/driver/bus-details/${user.id}`);
-            const notifs = await safeFetch('/api/driver/notifications');
+            const busNum = busInfo.bus_number;
+
+            const notifs = await safeFetch(`/api/driver/notifications?busNumber=${busNum}`);
 
             setBusData(busInfo);
             setNotifications(notifs);
@@ -45,7 +47,7 @@ const DriverDashboard = ({ user, onLogout }) => {
             });
 
             if (busInfo.route_number) {
-                const studentList = await safeFetch(`/api/driver/students/${busInfo.route_number}`);
+                const studentList = await safeFetch(`/api/driver/students/${busInfo.route_number}?busNumber=${busNum}`);
                 setStudents(studentList);
             }
         } catch (err) {
@@ -243,6 +245,7 @@ const DriverDashboard = ({ user, onLogout }) => {
                                                     <th>Roll Number</th>
                                                     <th>Name</th>
                                                     <th>Department</th>
+                                                    <th>Phone</th>
                                                     <th>Status</th>
                                                 </tr>
                                             </thead>
@@ -252,9 +255,12 @@ const DriverDashboard = ({ user, onLogout }) => {
                                                         <td>{student.roll_number}</td>
                                                         <td>{student.name}</td>
                                                         <td>{student.department}</td>
+                                                        <td style={{ fontSize: '0.9rem', color: 'var(--driver-primary)', fontWeight: '600' }}>
+                                                            {student.phone_number || 'N/A'}
+                                                        </td>
                                                         <td>
-                                                            <span className={`status-badge ${student.status}`}>
-                                                                {student.status}
+                                                            <span className={`status-badge ${student.status || 'registered'}`}>
+                                                                {student.status || 'New'}
                                                             </span>
                                                         </td>
                                                     </tr>

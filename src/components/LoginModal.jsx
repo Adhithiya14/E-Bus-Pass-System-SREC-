@@ -182,8 +182,8 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                     )}
 
                     <div className="login-header">
-                        <h2>{isForgotPassword ? 'Reset Password' : (formData.role === 'admin' ? 'Admin Portal Access' : isRegister ? 'Join QRide – SREC Campus Bus System' : 'Welcome Back')}</h2>
-                        <p>{isForgotPassword ? 'Recovery for SREC Register Numbers' : (formData.role === 'admin' ? 'Administrative security validation required' : isRegister ? 'Create your student account' : 'Sign in to access your dashboard')}</p>
+                        <h2>{isForgotPassword ? 'Reset Password' : (formData.role === 'admin' ? (isRegister ? 'Admin Registration' : 'Admin Portal Access') : isRegister ? 'Join QRide – SREC Campus Bus System' : 'Welcome Back')}</h2>
+                        <p>{isForgotPassword ? 'Recovery for SREC Register Numbers' : (formData.role === 'admin' ? (isRegister ? 'Create an administrative management account' : 'Administrative security validation required') : isRegister ? 'Create your student account' : 'Sign in to access your dashboard')}</p>
                     </div>
 
                     {isForgotPassword ? (
@@ -635,16 +635,14 @@ const LoginModal = ({ isOpen, onClose, onLogin, initialRole, initialMode = 'logi
                         </form>
                     )}
 
-                    {formData.role !== 'admin' && (
-                        <div className="login-footer">
-                            <p>
-                                {isRegister ? 'Already have an account?' : "Don't have an account?"}
-                                <button className="toggle-btn" type="button" onClick={() => { setIsRegister(!isRegister); setError(''); setSuccess(''); }}>
-                                    {isRegister ? 'Sign In' : 'Register Now'}
-                                </button>
-                            </p>
-                        </div>
-                    )}
+                    <div className="login-footer">
+                        <p>
+                            {isRegister ? 'Already have an account?' : "Don't have an account?"}
+                            <button className="toggle-btn" type="button" onClick={() => { setIsRegister(!isRegister); setError(''); setSuccess(''); }}>
+                                {isRegister ? 'Sign In' : 'Register Now'}
+                            </button>
+                        </p>
+                    </div>
                 </div>
             </div >
         )

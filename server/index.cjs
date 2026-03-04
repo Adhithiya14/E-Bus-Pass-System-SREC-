@@ -114,8 +114,8 @@ app.post('/api/register', async (req, res) => {
     const normalizedEmail = email?.trim().toLowerCase();
 
     // Basic validation
-    if (!name || !normalizedEmail || !password || (role === 'student' && (!roll_number || !department)) || (role === 'admin' && !department)) {
-        return res.status(400).json({ error: role === 'admin' ? "Missing admin fields" : role === 'driver' ? "Missing driver fields" : "Missing required fields (Register Number is mandatory)" });
+    if (!name || !normalizedEmail || !password || (role === 'student' && (!roll_number || !department))) {
+        return res.status(400).json({ error: role === 'driver' ? "Missing driver fields" : "Missing required fields (Register Number is mandatory)" });
     }
 
     try {
@@ -145,7 +145,7 @@ app.post('/api/register', async (req, res) => {
             name,
             normalizedEmail, // Keeping copy in users for profile view
             hashedPassword, // Satisfy NOT NULL constraint
-            role || 'student',
+            role, // Use the provided role directly, it's validated to be student or admin
             roll_number,
             department,
             year,
@@ -159,6 +159,8 @@ app.post('/api/register', async (req, res) => {
 
         db.serialize(() => {
             db.run("BEGIN TRANSACTION");
+
+            console.log("INSERTING USER WITH PARAMS:", paramsUser);
 
             db.run(sqlUser, paramsUser, function (err) {
                 if (err) {
@@ -180,6 +182,14 @@ app.post('/api/register', async (req, res) => {
                     }
 
                     db.run("COMMIT");
+
+                    // Notify Driver of New Registration
+                    if (role === 'student' && bus_number) {
+                        const driverMessage = `New student registration: ${name} (${roll_number}) has joined Bus ${bus_number}`;
+                        db.run(`INSERT INTO notifications (message, type, target_bus) VALUES (?, ?, ?)`,
+                            [driverMessage, 'registration', bus_number]);
+                    }
+
                     res.json({ id: userId, message: "User registered successfully" });
                 });
             });
@@ -624,12 +634,18 @@ app.post('/api/admin/update-status', (req, res) => {
     }
 });
 
-// Get User Notifications
+// Get User Notifications (Including Bus-wide broadcasts)
 app.get('/api/notifications/:userId', (req, res) => {
     const { userId } = req.params;
-    db.all(`SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 20`, [userId], (err, rows) => {
+    const sql = `
+        SELECT * FROM notifications 
+        WHERE user_id = ? 
+           OR (target_bus = (SELECT bus_number FROM users WHERE id = ?) AND target_bus IS NOT NULL AND type != 'registration')
+        ORDER BY created_at DESC LIMIT 20
+    `;
+    db.all(sql, [userId, userId], (err, rows) => {
         if (err) return res.status(500).json({ error: "Database error" });
-        res.json(rows);
+        res.json(rows || []);
     });
 });
 
@@ -1177,43 +1193,74 @@ app.get('/api/driver/bus-details/:driverId', (req, res) => {
     });
 });
 
-// 2. Get Student List for Assigned Bus
+// 2. Get Student List for Assigned Bus (All students on this bus, not just with passes)
 app.get('/api/driver/students/:routeNumber', (req, res) => {
     const { routeNumber } = req.params;
+    const { busNumber } = req.query; // Optional: can filter by bus number if route has multiple buses
+
+    // Step 1: Get the route details to find the bus number associated with this route
+    // Or just fetch students where bus_number matches
     const sql = `
-        SELECT u.roll_number, u.name, u.department, p.pass_type, p.status, p.valid_until
+        SELECT u.id, u.roll_number, u.name, u.department, u.phone_number,
+               p.pass_type, p.status, p.valid_until
         FROM users u
-        JOIN passes p ON u.id = p.user_id
-        WHERE p.route_number = ? AND p.status IN ('active', 'pending', 'expired')
+        LEFT JOIN (
+            SELECT user_id, MAX(id) as max_id
+            FROM passes
+            GROUP BY user_id
+        ) latest_p ON u.id = latest_p.user_id
+        LEFT JOIN passes p ON latest_p.max_id = p.id
+        WHERE u.bus_number = (SELECT bus_number FROM bus_routes WHERE route_number = ? LIMIT 1)
+           OR u.bus_number = ?
+           OR p.route_number = ?
         ORDER BY u.roll_number ASC
     `;
-    db.all(sql, [routeNumber], (err, rows) => {
+    db.all(sql, [routeNumber, busNumber, routeNumber], (err, rows) => {
         if (err) return res.status(500).json({ error: "Database error" });
         res.json(rows || []);
     });
 });
 
-// 3. Update Custom Timings
+// 3. Update Custom Timings & Notify Students
 app.post('/api/driver/update-timings', (req, res) => {
     const { driverId, morning_timing, evening_timing } = req.body;
     if (!driverId) return res.status(400).json({ error: "Missing Driver ID" });
 
-    const sql = `UPDATE drivers SET morning_timing = ?, evening_timing = ? WHERE id = ?`;
-    db.run(sql, [morning_timing, evening_timing, driverId], function (err) {
-        if (err) return res.status(500).json({ error: "Database error" });
-        res.json({ success: true, message: "Timings updated successfully" });
+    db.serialize(() => {
+        // 1. Get Driver's Bus Number
+        db.get(`SELECT bus_number FROM drivers WHERE id = ?`, [driverId], (err, driver) => {
+            if (err || !driver) return res.status(500).json({ error: "Driver not found" });
+
+            const busNum = driver.bus_number;
+
+            // 2. Update Timings
+            const sqlUpdate = `UPDATE drivers SET morning_timing = ?, evening_timing = ? WHERE id = ?`;
+            db.run(sqlUpdate, [morning_timing, evening_timing, driverId], function (err) {
+                if (err) return res.status(500).json({ error: "Database error during timing update" });
+
+                // 3. Broadcast Notification to Students of this Bus
+                const msg = `Schedule Update for Bus ${busNum}: New timings are Morning: ${morning_timing || 'N/A'}, Evening: ${evening_timing || 'N/A'}`;
+                db.run(`INSERT INTO notifications (message, type, target_bus) VALUES (?, 'info', ?)`,
+                    [msg, busNum], (err) => {
+                        if (err) console.error("Broadcast notification failed:", err);
+                        res.json({ success: true, message: "Timings updated and students notified" });
+                    });
+            });
+        });
     });
 });
 
 
-// 5. Driver Notifications (Read-Only Alerts from Admin)
+// 5. Driver Notifications (Including bus-specific registration alerts)
 app.get('/api/driver/notifications', (req, res) => {
+    const { busNumber } = req.query;
     const sql = `
         SELECT * FROM notifications 
-        WHERE type IN ('emergency', 'route_change') 
-        ORDER BY created_at DESC LIMIT 10
+        WHERE type IN ('emergency', 'route_change', 'registration')
+        AND (target_bus IS NULL OR target_bus = ?)
+        ORDER BY created_at DESC LIMIT 20
     `;
-    db.all(sql, [], (err, rows) => {
+    db.all(sql, [busNumber], (err, rows) => {
         if (err) return res.status(500).json({ error: "Database error" });
         res.json(rows || []);
     });

@@ -171,10 +171,14 @@ db.serialize(() => {
     user_id INTEGER,
     message TEXT,
     type TEXT,
+    target_bus TEXT, -- For bus-specific alerts (e.g. driver notifications)
     is_read INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id)
   )`);
+
+  // Migration for target_bus
+  db.run(`ALTER TABLE notifications ADD COLUMN target_bus TEXT`, (err) => { });
 
   db.run(`CREATE TABLE IF NOT EXISTS scans (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

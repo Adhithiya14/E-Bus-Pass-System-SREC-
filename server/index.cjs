@@ -9,6 +9,9 @@ const QRCode = require('qrcode');
 const app = express();
 const PORT = 5000;
 
+// Debug static data
+console.log("Loaded routeStopsData keys:", Object.keys(routeStopsData));
+
 // Keep-alive to prevent premature exit (Debug)
 setInterval(() => { }, 1000);
 
@@ -122,8 +125,8 @@ app.post('/api/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         if (role === 'driver') {
-            const sqlDriver = `INSERT INTO drivers (name, email, password, phone_number, bus_number, profile_pic) VALUES (?, ?, ?, ?, ?, ?)`;
-            const paramsDriver = [name, normalizedEmail, hashedPassword, phone_number, bus_number, profile_pic];
+            const sqlDriver = `INSERT INTO drivers (name, email, password, phone_number, bus_number, route_number, profile_pic) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+            const paramsDriver = [name, normalizedEmail, hashedPassword, phone_number, bus_number, req.body.route_number || '', profile_pic];
 
             db.run(sqlDriver, paramsDriver, function (err) {
                 if (err) {
@@ -694,15 +697,48 @@ app.get('/api/routes', (req, res) => {
 // Get stops for a specific bus route (for Map Visualization)
 app.get('/api/route-stops/:busNumber', (req, res) => {
     const { busNumber } = req.params;
-    const stops = routeStopsData[busNumber] || routeStopsData[parseInt(busNumber)];
+    console.log(`[MapAPI] Requesting stops for: "${busNumber}"`);
 
-    if (!stops) {
-        return res.status(404).json({ error: "No stop data found for this bus" });
+    // 1. Try direct lookup (best for Route Numbers "1", "2", ...)
+    let stops = routeStopsData[busNumber] || routeStopsData[String(busNumber).trim()];
+
+    // Fallback for numeric keys if passed as string
+    if (!stops && !isNaN(parseInt(busNumber))) {
+        stops = routeStopsData[parseInt(busNumber)];
     }
 
-    // Ensure stops are sorted by order
-    const sortedStops = [...stops].sort((a, b) => a.order - b.order);
-    res.json(sortedStops);
+    if (stops) {
+        console.log(`[MapAPI] Found stops for "${busNumber}" in static data.`);
+        const sortedStops = [...stops].sort((a, b) => a.order - b.order);
+        return res.json(sortedStops);
+    }
+
+    // 2. If not found, try to find the route_number associated with this Bus Plate Number in DB
+    console.log(`[MapAPI] No static data for "${busNumber}", checking database...`);
+    db.get(`SELECT route_number FROM bus_routes WHERE bus_number = ? OR route_number = ?`, [busNumber, busNumber], (err, row) => {
+        if (err) {
+            console.error(`[MapAPI] Database error: ${err.message}`);
+            return res.status(500).json({ error: "Internal Database Error" });
+        }
+
+        if (!row) {
+            console.warn(`[MapAPI] No route found for bus identifier: "${busNumber}"`);
+            return res.status(404).json({ error: "No stop data found for this bus/route" });
+        }
+
+        const routeNum = row.route_number;
+        console.log(`[MapAPI] DB found route "${routeNum}" for identifier "${busNumber}"`);
+
+        const dbStops = routeStopsData[routeNum] || routeStopsData[String(routeNum)] || (isNaN(parseInt(routeNum)) ? null : routeStopsData[parseInt(routeNum)]);
+
+        if (!dbStops) {
+            console.warn(`[MapAPI] Found route "${routeNum}" in DB but no stops in static file.`);
+            return res.status(404).json({ error: "Stops not defined for this route" });
+        }
+
+        const sortedStops = [...dbStops].sort((a, b) => a.order - b.order);
+        res.json(sortedStops);
+    });
 });
 
 // Verify Pass by QR String (Advanced Verification)
@@ -1181,9 +1217,16 @@ app.get('/api/route-change/my-requests/:userId', (req, res) => {
 app.get('/api/driver/bus-details/:driverId', (req, res) => {
     const { driverId } = req.params;
     const sql = `
-        SELECT d.bus_number, d.morning_timing, d.evening_timing, r.route_number, r.route_name, r.stops
+        SELECT 
+            d.bus_number, 
+            COALESCE(d.route_number, r.route_number) as route_number,
+            d.morning_timing, 
+            d.evening_timing, 
+            r.route_name, 
+            r.stops,
+            r.timings
         FROM drivers d
-        LEFT JOIN bus_routes r ON d.bus_number = r.bus_number
+        LEFT JOIN bus_routes r ON d.bus_number = r.bus_number OR d.route_number = r.route_number
         WHERE d.id = ?
     `;
     db.get(sql, [driverId], (err, row) => {

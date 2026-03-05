@@ -281,12 +281,14 @@ db.serialize(() => {
     password TEXT NOT NULL,
     phone_number TEXT,
     bus_number TEXT,
+    route_number TEXT,
     morning_timing TEXT,
     evening_timing TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
 
   // Migration for Drivers
+  db.run(`ALTER TABLE drivers ADD COLUMN route_number TEXT`, (err) => { });
   db.run(`ALTER TABLE drivers ADD COLUMN morning_timing TEXT`, (err) => {
     if (err && !err.message.includes('duplicate column name')) console.error(err);
   });
@@ -297,12 +299,24 @@ db.serialize(() => {
 
   // Seed Default Driver
   db.get(`SELECT * FROM drivers WHERE email = 'driver@srec.edu'`, async (err, row) => {
+    const bcrypt = require('bcrypt');
+    const hashedPassword = await bcrypt.hash('driver123', 10);
+    const driverData = ['Senthil Kumar', 'driver@srec.edu', hashedPassword, '9876543210', 'TN 38 BP 7399', '10'];
+
     if (!row) {
-      const bcrypt = require('bcrypt');
-      const hashedPassword = await bcrypt.hash('driver123', 10);
       db.run(`INSERT INTO drivers (name, email, password, phone_number, bus_number, route_number) VALUES (?, ?, ?, ?, ?, ?)`,
-        ['Senthil Kumar', 'driver@srec.edu', hashedPassword, '9876543210', 'TN-37-G-101', '101']);
+        driverData);
       console.log('✅ Default Driver account seeded: driver@srec.edu / driver123');
+    } else {
+      // Force update default driver to ensure valid data for map testing
+      db.run(`UPDATE drivers SET bus_number = ?, route_number = ? WHERE email = ?`,
+        ['TN 38 BP 7399', '10', 'driver@srec.edu'], (err) => {
+          if (err) {
+            console.error('❌ Failed to update default driver:', err.message);
+          } else {
+            console.log('✅ Default Driver account updated with valid Route 10 and Bus TN 38 BP 7399');
+          }
+        });
     }
   });
 });

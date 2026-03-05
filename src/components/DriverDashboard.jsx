@@ -207,18 +207,48 @@ const DriverDashboard = ({ user, onLogout }) => {
 
                                 <div className="glass-panel map-section-driver" style={{ marginTop: '20px' }}>
                                     <div className="card-header">
-                                        <MapIcon size={28} color="var(--driver-primary)" />
-                                        <h2>Route Map Visualization</h2>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                            <MapIcon size={28} color="var(--driver-primary)" />
+                                            <div>
+                                                <h2 style={{ margin: 0 }}>Route Map & Schedule</h2>
+                                                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
+                                                    {busData?.route_name || 'Assigned Route'}
+                                                </p>
+                                            </div>
+                                        </div>
                                         <button
                                             className={`toggle-map-btn-driver ${showMap ? 'active' : ''}`}
                                             onClick={() => setShowMap(!showMap)}
                                         >
-                                            {showMap ? 'Hide Map' : 'View Route Map'}
+                                            {showMap ? 'Hide Details' : 'View Route Details'}
                                         </button>
                                     </div>
+
                                     {showMap && (
-                                        <div className="driver-map-wrapper">
-                                            <BusRouteMap routeNumber={busData?.route_number} />
+                                        <div className="driver-map-wrapper" style={{ padding: '20px', animation: 'fadeIn 0.5s ease-out' }}>
+                                            {/* Schedule Table (Matching Home Page) */}
+                                            <div className="boarding-schedule-driver" style={{ marginBottom: '25px', background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                                <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '15px', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <div style={{ width: '4px', height: '18px', background: 'var(--driver-primary)', borderRadius: '2px' }}></div>
+                                                    Boarding Stops & Official Timings
+                                                </h3>
+                                                <div className="stops-grid-driver" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+                                                    {busData?.stops ? busData.stops.split(',').map((stop, index) => {
+                                                        const timings = busData.timings ? busData.timings.split(',') : [];
+                                                        return (
+                                                            <div key={index} className="stop-card-driver" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 15px', background: 'white', borderRadius: '8px', border: '1px solid #f1f5f9', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                                                <span style={{ fontWeight: '600', color: '#334155', fontSize: '0.9rem' }}>{stop.trim()}</span>
+                                                                {timings[index] && <span style={{ color: 'var(--driver-primary)', fontWeight: '700', fontSize: '0.85rem' }}>{timings[index].trim()}</span>}
+                                                            </div>
+                                                        );
+                                                    }) : (
+                                                        <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No stop information available.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Map Visualization */}
+                                            <BusRouteMap routeNumber={busData?.bus_number || busData?.route_number} />
                                         </div>
                                     )}
                                 </div>

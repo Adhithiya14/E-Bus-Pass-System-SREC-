@@ -72,10 +72,16 @@ const Navbar = ({ user, onOpenLogin, onLogout }) => {
           {user ? (
             <div className="user-menu">
               {user.profile_pic ? (
-                <img src={user.profile_pic} alt="Profile" className="nav-avatar" />
+                <img
+                  src={user.profile_pic}
+                  alt="Profile"
+                  className="nav-avatar"
+                  onClick={() => navigate(user.role === 'admin' ? '/admin' : user.role === 'driver' ? '/driver' : '/dashboard')}
+                  style={{ cursor: 'pointer' }}
+                />
               ) : null}
-              {/* Navigate to dashboard if clicked on name */}
-              <span className="user-name" onClick={() => navigate(user.role === 'admin' ? '/admin' : '/dashboard')} style={{ cursor: 'pointer' }}>
+              {/* Navigate to dashboard if clicked on name or profile pic */}
+              <span className="user-name" onClick={() => navigate(user.role === 'admin' ? '/admin' : user.role === 'driver' ? '/driver' : '/dashboard')} style={{ cursor: 'pointer' }}>
                 Hi, {user.name}
               </span>
               <button className="btn-outline" onClick={onLogout}>Logout</button>

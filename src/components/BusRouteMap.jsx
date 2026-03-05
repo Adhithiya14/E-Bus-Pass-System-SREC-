@@ -57,6 +57,9 @@ const BusRouteMap = ({ routeNumber }) => {
 
         if (routeNumber) {
             fetchStops();
+        } else {
+            setLoading(false);
+            setError('Route information not available.');
         }
     }, [routeNumber]);
 

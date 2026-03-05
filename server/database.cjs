@@ -227,6 +227,13 @@ db.serialize(() => {
     }
   });
 
+  db.all("PRAGMA table_info(passes)", (err, rows) => {
+    const columns = rows.map(r => r.name);
+    if (!columns.includes('your_new_column')) {
+      db.run(`ALTER TABLE passes ADD COLUMN your_new_column TEXT`);
+    }
+  });
+
   // Credentials Table
   db.run(`CREATE TABLE IF NOT EXISTS credentials (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -295,7 +302,27 @@ db.serialize(() => {
   db.run(`ALTER TABLE drivers ADD COLUMN evening_timing TEXT`, (err) => {
     if (err && !err.message.includes('duplicate column name')) console.error(err);
   });
+  db.run(`ALTER TABLE drivers ADD COLUMN profile_pic TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) console.error(err);
+  });
 
+  // Add route_number column to drivers table if it doesn't exist
+  db.all("PRAGMA table_info(drivers)", (err, rows) => {
+    if (err) {
+      console.error("Error checking drivers table:", err);
+      return;
+    }
+    const columns = rows.map(r => r.name);
+    if (!columns.includes('route_number')) {
+      db.run(`ALTER TABLE drivers ADD COLUMN route_number TEXT`, (err) => {
+        if (err) {
+          console.error("Error adding route_number column:", err);
+        } else {
+          console.log("✓ Added route_number column to drivers table");
+        }
+      });
+    }
+  });
 
   // Seed Default Driver
   db.get(`SELECT * FROM drivers WHERE email = 'driver@srec.edu'`, async (err, row) => {

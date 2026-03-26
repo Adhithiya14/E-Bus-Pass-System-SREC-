@@ -86,10 +86,10 @@ const ProfileSettings = ({ user, onClose, onUpdateUser }) => {
                     <>
                         <div className="profile-upload-section">
                             <div className="avatar-preview-container">
-                                {user.profile_pic ? (
+                                {user?.profile_pic ? (
                                     <img src={user.profile_pic} alt="Profile" className="avatar-preview" />
                                 ) : (
-                                    <div className="avatar-placeholder">{user.name.charAt(0)}</div>
+                                    <div className="avatar-placeholder">{user?.name ? user.name.charAt(0).toUpperCase() : 'U'}</div>
                                 )}
                                 <label className="upload-label" title="Change Photo">
                                     <Camera size={18} />
